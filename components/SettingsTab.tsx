@@ -24,6 +24,7 @@ export default function SettingsTab({ onUnitChange, installPrompt, onInstalled, 
     () => typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches
   );
   const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isAndroid = typeof navigator !== 'undefined' && /Android/.test(navigator.userAgent);
   const isSecure = typeof window !== 'undefined' && window.isSecureContext;
 
   function handleUnit(u: Unit) {
@@ -121,15 +122,19 @@ export default function SettingsTab({ onUnitChange, installPrompt, onInstalled, 
             </Button>
           ) : isIOS ? (
             <p className="text-xs text-gray-500">
-              Tap the Share button in Safari, then <strong>Add to Home Screen</strong>.
+              Tap the <strong>Share</strong> button in Safari, then tap <strong>Add to Home Screen</strong>.
+            </p>
+          ) : isAndroid ? (
+            <p className="text-xs text-gray-500">
+              Tap the <strong>⋮</strong> menu in Chrome, then tap <strong>Add to Home Screen</strong> or <strong>Install App</strong>.
             </p>
           ) : !isSecure ? (
             <p className="text-xs text-gray-500">
-              Install requires HTTPS. Open this app from a deployed URL (e.g. Vercel) and the install button will appear here automatically.
+              Install requires HTTPS.
             </p>
           ) : (
             <p className="text-xs text-gray-500">
-              Reload the page — the install button will appear once the browser is ready.
+              Open the browser menu and select <strong>Install App</strong> or <strong>Add to Home Screen</strong>.
             </p>
           )}
         </CardContent>

@@ -1,12 +1,15 @@
 {
+  "id": "/",
   "name": "Weight Tracker",
   "short_name": "WeightTracker",
   "description": "Track your daily weight and progress toward your goal",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#f9fafb",
   "theme_color": "#3b82f6",
   "orientation": "portrait",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/icon-192.png",

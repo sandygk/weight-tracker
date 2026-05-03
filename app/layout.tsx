@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,6 +16,9 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: "default",
     title: "Weight Tracker",
+  },
+  icons: {
+    apple: "/icon-192.png",
   },
 };
 
@@ -34,6 +38,12 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geistSans.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-gray-50">
+        <Script id="pwa-capture" strategy="beforeInteractive">{`
+          window.addEventListener('beforeinstallprompt', function(e) {
+            e.preventDefault();
+            window.__pwaPrompt = e;
+          });
+        `}</Script>
         {children}
       </body>
     </html>
