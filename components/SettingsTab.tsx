@@ -5,14 +5,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Unit, getUnit, saveUnit } from '@/lib/units';
 import { exportCSV } from '@/lib/storage';
+import CSVImport from '@/components/CSVImport';
 
 interface Props {
   onUnitChange: (unit: Unit) => void;
   installPrompt: any;
   onInstalled: () => void;
+  onImport: () => void;
 }
 
-export default function SettingsTab({ onUnitChange, installPrompt, onInstalled }: Props) {
+export default function SettingsTab({ onUnitChange, installPrompt, onInstalled, onImport }: Props) {
   const [unit, setUnit] = useState<Unit>(() => getUnit());
   const [installed, setInstalled] = useState(
     () => typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches
@@ -83,6 +85,8 @@ export default function SettingsTab({ onUnitChange, installPrompt, onInstalled }
           </p>
         </CardContent>
       </Card>
+
+      <CSVImport onImport={onImport} />
 
       <Card>
         <CardHeader>

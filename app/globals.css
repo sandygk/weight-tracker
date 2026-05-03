@@ -127,4 +127,9 @@
   html {
     @apply font-sans;
   }
+  .recharts-wrapper,
+  .recharts-surface {
+    outline: none !important;
+    -webkit-tap-highlight-color: transparent;
+  }
 }

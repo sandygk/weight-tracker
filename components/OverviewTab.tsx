@@ -5,12 +5,6 @@ import WeightChart from './WeightChart';
 import { WeightEntry, Goal } from '@/types';
 import { goalEndDate, expectedWeightOnDate } from '@/lib/goalCalculator';
 import { Unit, toDisplay } from '@/lib/units';
-import { upsertEntry } from '@/lib/storage';
-import { Button } from '@/components/ui/button';
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
-  DialogFooter, DialogClose,
-} from '@/components/ui/dialog';
 
 const RANGE_KEY = 'wt-range';
 
@@ -44,10 +38,8 @@ interface Props {
   onChange: () => void;
 }
 
-export default function OverviewTab({ entries, goal, unit, onChange }: Props) {
+export default function OverviewTab({ entries, goal, unit }: Props) {
   const [range, setRange] = useState<RangeLabel>(() => loadRange());
-  const [editingEntry, setEditingEntry] = useState<WeightEntry | null>(null);
-  const [noteText, setNoteText] = useState('');
 
   const sorted = useMemo(
     () => [...entries].sort((a, b) => a.date.localeCompare(b.date)),
@@ -68,18 +60,6 @@ export default function OverviewTab({ entries, goal, unit, onChange }: Props) {
     localStorage.setItem(RANGE_KEY, r);
   }
 
-  function openNoteEditor(entry: WeightEntry) {
-    setEditingEntry(entry);
-    setNoteText(entry.note ?? '');
-  }
-
-  function saveNote() {
-    if (!editingEntry) return;
-    upsertEntry({ date: editingEntry.date, weight: editingEntry.weight, note: noteText.trim() || undefined });
-    setEditingEntry(null);
-    onChange();
-  }
-
   const rangeEntries = useMemo(() => {
     if (activeRange === 'Since' || activeRange === 'Goal') {
       if (!goal) return sorted;
@@ -94,27 +74,43 @@ export default function OverviewTab({ entries, goal, unit, onChange }: Props) {
   }, [sorted, activeRange, goal]);
 
   const latest = sorted.length > 0 ? sorted[sorted.length - 1] : null;
-  const rangeFirst = rangeEntries.length > 0 ? rangeEntries[0] : null;
+  const overallFirst = sorted.length > 0 ? sorted[0] : null;
 
-  const change =
-    latest && rangeFirst && latest.id !== rangeFirst.id
-      ? Math.round((latest.weight - rangeFirst.weight) * 10) / 10
-      : null;
+  // Total change from very first entry to latest
+  const totalChange = (latest && overallFirst && latest.id !== overallFirst.id)
+    ? Math.round((toDisplay(latest.weight, unit) - toDisplay(overallFirst.weight, unit)) * 10) / 10
+    : null;
 
-  const remaining =
-    goal && latest
-      ? Math.round((latest.weight - goal.goalWeight) * 10) / 10
-      : null;
+  // Today's goal target and delta
+  const todayTarget = goal ? expectedWeightOnDate(goal, todayStr) : null;
+  const todayTargetDisplay = todayTarget != null
+    ? Math.round(toDisplay(todayTarget, unit) * 10) / 10
+    : null;
+  const todayDelta = (todayTargetDisplay != null && latest)
+    ? Math.round((toDisplay(latest.weight, unit) - todayTargetDisplay) * 10) / 10
+    : null;
+
+  // How much remains to reach the end goal
+  const remainingToGoal = (goal && latest)
+    ? Math.round((toDisplay(latest.weight, unit) - toDisplay(goal.goalWeight, unit)) * 10) / 10
+    : null;
 
   const currentColor = (() => {
     if (!goal || !latest) return 'text-blue-600';
     const exp = expectedWeightOnDate(goal, todayStr);
     if (exp == null) return 'text-blue-600';
     const diff = toDisplay(latest.weight, unit) - toDisplay(exp, unit);
-    if (diff <= 0) return 'text-green-500';
+    if (diff <= -1) return 'text-green-500';
+    if (diff <= 0) return 'text-lime-500';
     if (diff <= 1) return 'text-orange-500';
     return 'text-red-500';
   })();
+
+  const deltaColor = todayDelta === null ? 'text-gray-400'
+    : todayDelta <= -1 ? 'text-green-500'
+    : todayDelta <= 0 ? 'text-lime-500'
+    : todayDelta <= 1 ? 'text-orange-500'
+    : 'text-red-500';
 
   if (entries.length === 0) {
     return (
@@ -144,44 +140,56 @@ export default function OverviewTab({ entries, goal, unit, onChange }: Props) {
         </select>
       </div>
 
-      {/* Stats */}
+      {/* Stats: Start | Today | End Goal */}
       <div className="grid grid-cols-3 text-center px-2 pb-4">
         {/* Start */}
-        <div className="flex flex-col items-center gap-0.5 px-2">
-          <p className="text-xs text-gray-400">Start</p>
+        <div className="flex flex-col items-center gap-0.5 px-1">
+          <p className="text-xs text-gray-400 mb-0.5">Start</p>
           <p className="text-2xl font-bold text-gray-700 leading-tight">
-            {rangeFirst ? toDisplay(rangeFirst.weight, unit) : '—'}
-            {rangeFirst && <span className="text-sm font-medium text-gray-500 ml-1">{unit}</span>}
+            {overallFirst ? toDisplay(overallFirst.weight, unit) : '—'}
+            {overallFirst && <span className="text-sm font-medium text-gray-500 ml-0.5">{unit}</span>}
           </p>
-          {rangeFirst && (
-            <p className="text-xs text-gray-400 mt-0.5">{formatShortDate(rangeFirst.date)}</p>
-          )}
-        </div>
-
-        {/* Current */}
-        <div className="flex flex-col items-center gap-0.5 px-2 border-x border-gray-100">
-          <p className="text-xs text-gray-400">Current</p>
-          <p className={`text-2xl font-bold leading-tight ${currentColor}`}>
-            {latest ? toDisplay(latest.weight, unit) : '—'}
-            {latest && <span className="text-sm font-medium ml-1 opacity-70">{unit}</span>}
-          </p>
-          {change !== null && (
-            <p className={`text-xs font-semibold mt-0.5 ${change > 0 ? 'text-red-500' : change < 0 ? 'text-green-500' : 'text-gray-400'}`}>
-              {change > 0 ? '+' : ''}{toDisplay(change, unit)} {unit}
+          <p className="text-xs text-gray-400">{overallFirst ? formatShortDate(overallFirst.date) : '—'}</p>
+          {totalChange !== null && (
+            <p className={`text-xs font-semibold mt-0.5 ${totalChange > 0 ? 'text-red-500' : totalChange < 0 ? 'text-green-500' : 'text-gray-400'}`}>
+              {totalChange > 0 ? '+' : ''}{totalChange} {unit}
             </p>
           )}
         </div>
 
-        {/* Goal */}
-        <div className="flex flex-col items-center gap-0.5 px-2">
-          <p className="text-xs text-gray-400">Goal</p>
+        {/* Today */}
+        <div className="flex flex-col items-center gap-0.5 px-1 border-x border-gray-100">
+          <p className="text-xs text-gray-400 mb-0.5">Today</p>
+          <p className={`text-2xl font-bold leading-tight ${currentColor}`}>
+            {latest ? toDisplay(latest.weight, unit) : '—'}
+            {latest && <span className="text-sm font-medium ml-0.5 opacity-70">{unit}</span>}
+          </p>
+          <p className="text-xs text-gray-400">{formatShortDate(todayStr)}</p>
+          {todayTargetDisplay !== null && (
+            <p className="text-xs text-gray-400 mt-0.5">
+              Target: {todayTargetDisplay} {unit}
+            </p>
+          )}
+          {todayDelta !== null && (
+            <p className={`text-xs font-semibold ${deltaColor}`}>
+              {todayDelta > 0 ? '+' : ''}{todayDelta} {unit}
+            </p>
+          )}
+        </div>
+
+        {/* End Goal */}
+        <div className="flex flex-col items-center gap-0.5 px-1">
+          <p className="text-xs text-gray-400 mb-0.5">End Goal</p>
           <p className="text-2xl font-bold text-gray-700 leading-tight">
             {goal ? toDisplay(goal.goalWeight, unit) : '—'}
-            {goal && <span className="text-sm font-medium text-gray-500 ml-1">{unit}</span>}
+            {goal && <span className="text-sm font-medium text-gray-500 ml-0.5">{unit}</span>}
           </p>
-          {remaining !== null && (
-            <p className={`text-xs mt-0.5 ${remaining <= 0 ? 'text-green-500 font-semibold' : 'text-gray-400'}`}>
-              {remaining <= 0 ? 'Reached!' : `${toDisplay(remaining, unit)} ${unit} to go`}
+          {goalEnd && <p className="text-xs text-gray-400">{formatShortDate(goalEnd)}</p>}
+          {remainingToGoal !== null && (
+            <p className={`text-xs font-semibold mt-0.5 ${remainingToGoal <= 0 ? 'text-green-500' : 'text-gray-400'}`}>
+              {remainingToGoal <= 0
+                ? 'Reached!'
+                : `${Math.abs(remainingToGoal).toFixed(1)} ${unit} to go`}
             </p>
           )}
         </div>
@@ -194,36 +202,8 @@ export default function OverviewTab({ entries, goal, unit, onChange }: Props) {
           goal={goal}
           unit={unit}
           extendGoalLine={activeRange === 'Goal'}
-          onDotClick={openNoteEditor}
         />
       </div>
-
-      {/* Note editor */}
-      <Dialog open={!!editingEntry} onOpenChange={open => { if (!open) setEditingEntry(null); }}>
-        <DialogContent showCloseButton={false}>
-          <DialogHeader>
-            <DialogTitle>
-              {editingEntry?.note ? 'Edit note' : 'Add note'}
-            </DialogTitle>
-          </DialogHeader>
-          <p className="text-xs text-gray-400 -mt-1">
-            {editingEntry && `${formatShortDate(editingEntry.date)} · ${toDisplay(editingEntry.weight, unit)} ${unit}`}
-          </p>
-          <textarea
-            value={noteText}
-            onChange={e => setNoteText(e.target.value)}
-            placeholder="Enter a note…"
-            maxLength={120}
-            rows={3}
-            autoFocus
-            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 placeholder-gray-300 resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"
-          />
-          <DialogFooter>
-            <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
-            <Button onClick={saveNote}>Save</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

@@ -9,7 +9,7 @@ import { Unit, toDisplay } from '@/lib/units';
 
 interface ChartPoint {
   date: string;
-  ts: number;       // Unix ms — used for proportional x-axis positioning
+  ts: number;
   label: string;
   weight?: number;
   goalWeight?: number;
@@ -23,9 +23,18 @@ interface ColorRun {
 
 const STROKE: Record<string, string> = {
   green: '#22c55e',
+  lime: '#84cc16',
   orange: '#f97316',
   red: '#ef4444',
   default: '#3b82f6',
+};
+
+const TOOLTIP_CLASS: Record<string, string> = {
+  green: 'text-green-500',
+  lime: 'text-lime-500',
+  orange: 'text-orange-500',
+  red: 'text-red-500',
+  default: 'text-blue-600',
 };
 
 function segColor(p: ChartPoint, goal: Goal | null, unit: Unit): string {
@@ -33,27 +42,19 @@ function segColor(p: ChartPoint, goal: Goal | null, unit: Unit): string {
   const exp = expectedWeightOnDate(goal, p.date);
   if (exp == null) return 'default';
   const diff = p.weight - toDisplay(exp, unit);
-  if (diff <= 0) return 'green';
+  if (diff <= -1) return 'green';
+  if (diff <= 0) return 'lime';
   if (diff <= 1) return 'orange';
   return 'red';
 }
 
-/**
- * Builds full-length sparse arrays for each color run so recharts positions
- * each run by its correct data index (not label value). Adjacent runs share
- * their boundary point so transitions connect without gaps.
- *
- * A segment Pi→Pi+1 takes the color of Pi+1 (destination color).
- */
 function buildColorRuns(mainData: ChartPoint[], goal: Goal | null, unit: Unit): ColorRun[] {
   const wPts = mainData.filter(p => p.weight != null);
   if (wPts.length < 2) return [];
 
-  // Map each weight point to its index in mainData
   const dateIdx = new Map(mainData.map((p, i) => [p.date, i]));
 
-  // Identify run boundaries (segment Si color = color of wPts[i+1])
-  type RawRun = { start: number; end: number; color: string }; // indices into wPts
+  type RawRun = { start: number; end: number; color: string };
   const rawRuns: RawRun[] = [];
   let runStart = 0;
   let runColor = segColor(wPts[1], goal, unit);
@@ -62,13 +63,12 @@ function buildColorRuns(mainData: ChartPoint[], goal: Goal | null, unit: Unit): 
     const next = segColor(wPts[i + 1], goal, unit);
     if (next !== runColor) {
       rawRuns.push({ start: runStart, end: i, color: runColor });
-      runStart = i;       // boundary point is shared with next run
+      runStart = i;
       runColor = next;
     }
   }
   rawRuns.push({ start: runStart, end: wPts.length - 1, color: runColor });
 
-  // Build full-length sparse arrays
   return rawRuns.map(({ start, end, color }) => {
     const data = mainData.map(p => ({ ts: p.ts, label: p.label, w: null as number | null }));
     for (let wi = start; wi <= end; wi++) {
@@ -80,9 +80,6 @@ function buildColorRuns(mainData: ChartPoint[], goal: Goal | null, unit: Unit): 
   });
 }
 
-/** Returns a full-length sparse array with `gw` set only at the first and last
- *  goal-line data points — guarantees a single straight segment regardless of
- *  how many intermediate entries exist. */
 function buildGoalAnchors(mainData: ChartPoint[]): { ts: number; label: string; gw: number | null }[] {
   const indexed = mainData
     .map((p, i) => ({ p, i }))
@@ -139,10 +136,9 @@ interface Props {
   goal: Goal | null;
   unit: Unit;
   extendGoalLine?: boolean;
-  onDotClick?: (entry: WeightEntry) => void;
 }
 
-export default function WeightChart({ entries, goal, unit, extendGoalLine = false, onDotClick }: Props) {
+export default function WeightChart({ entries, goal, unit, extendGoalLine = false }: Props) {
   if (entries.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-56 gap-3 text-gray-300">
@@ -151,8 +147,6 @@ export default function WeightChart({ entries, goal, unit, extendGoalLine = fals
       </div>
     );
   }
-
-  const entryByDate = new Map(entries.map(e => [e.date, e]));
 
   const data = buildData(entries, goal, extendGoalLine, unit);
   const colorRuns = buildColorRuns(data, goal, unit);
@@ -167,7 +161,8 @@ export default function WeightChart({ entries, goal, unit, extendGoalLine = fals
     const exp = expectedWeightOnDate(goal, payload.date);
     if (exp == null) return '#3b82f6';
     const diff = payload.weight - toDisplay(exp, unit);
-    if (diff <= 0) return '#22c55e';
+    if (diff <= -1) return '#22c55e';
+    if (diff <= 0) return '#84cc16';
     if (diff <= 1) return '#f97316';
     return '#ef4444';
   };
@@ -176,12 +171,9 @@ export default function WeightChart({ entries, goal, unit, extendGoalLine = fals
     const { cx, cy, payload } = props;
     if (!payload?.weight || cx == null || cy == null) return null;
     const color = getDotColor(payload);
-    const entry = entryByDate.get(payload.date);
     return (
       <circle cx={cx} cy={cy} r={payload.note ? 4.5 : 3}
         fill={payload.note ? color : 'white'} stroke={color} strokeWidth={1.5}
-        style={entry && onDotClick ? { cursor: 'pointer' } : undefined}
-        onClick={entry && onDotClick ? () => onDotClick(entry) : undefined}
       />
     );
   };
@@ -198,59 +190,65 @@ export default function WeightChart({ entries, goal, unit, extendGoalLine = fals
     const gp = payload.find((p: any) => p.dataKey === 'goalWeight');
     const anyPayload = payload[0]?.payload;
     const dateLabel = anyPayload?.label ?? fmt(new Date(label).toISOString().split('T')[0]);
+
+    const colorKey = anyPayload?.date && wp?.value != null
+      ? segColor({ date: anyPayload.date, ts: anyPayload.ts ?? 0, label: dateLabel, weight: wp.value }, goal, unit)
+      : 'default';
+    const weightClass = TOOLTIP_CLASS[colorKey] ?? 'text-blue-600';
+
     return (
       <div className="bg-white border border-gray-100 rounded-xl px-3 py-2 shadow-md text-xs max-w-48">
         <p className="font-semibold text-gray-600 mb-1">{dateLabel}</p>
-        {wp && <p className="text-blue-600">Weight: <strong>{wp.value} {unit}</strong></p>}
-        {gp && <p className="text-orange-500">Goal: <strong>{Number(gp.value).toFixed(1)} {unit}</strong></p>}
+        {wp && <p className={weightClass}>Weight: <strong>{wp.value} {unit}</strong></p>}
+        {gp && <p className="text-purple-500">Goal: <strong>{Number(gp.value).toFixed(1)} {unit}</strong></p>}
         {wp?.payload?.note && <p className="text-gray-500 mt-1">{wp.payload.note}</p>}
       </div>
     );
   };
 
   return (
-    <ResponsiveContainer width="100%" height={260}>
-      <ComposedChart data={data} margin={{ top: 4, right: 12, left: -20, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
-        <XAxis
-          type="number" dataKey="ts" scale="time"
-          domain={['dataMin', 'dataMax']}
-          ticks={data.map(p => p.ts)}
-          interval="preserveStartEnd"
-          tickFormatter={(ts: number) => fmt(new Date(ts).toISOString().split('T')[0])}
-          tick={{ fontSize: 10, fill: '#9ca3af' }}
-          axisLine={false} tickLine={false}
-        />
-        <YAxis domain={[yMin, yMax]} tick={{ fontSize: 10, fill: '#9ca3af' }}
-          axisLine={false} tickLine={false} />
-        <Tooltip content={<CustomTooltip />} />
+    <div style={{ outline: 'none', WebkitTapHighlightColor: 'transparent' }}>
+      <ResponsiveContainer width="100%" height={260}>
+        <ComposedChart data={data} margin={{ top: 4, right: 12, left: -20, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
+          <XAxis
+            type="number" dataKey="ts" scale="time"
+            domain={['dataMin', 'dataMax']}
+            ticks={data.map(p => p.ts)}
+            interval="preserveStartEnd"
+            tickFormatter={(ts: number) => fmt(new Date(ts).toISOString().split('T')[0])}
+            tick={{ fontSize: 10, fill: '#9ca3af' }}
+            axisLine={false} tickLine={false}
+          />
+          <YAxis domain={[yMin, yMax]} tick={{ fontSize: 10, fill: '#9ca3af' }}
+            axisLine={false} tickLine={false} />
+          <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#e5e7eb', strokeWidth: 1 }} />
 
-        {/* Visual goal line: exactly 2 anchor points → single straight segment */}
-        {goal && goalAnchors && goalAnchors.length > 0 && (
-          <Line data={goalAnchors} type="linear" dataKey="gw"
-            stroke="#f97316" strokeWidth={1.5} strokeDasharray="5 5"
-            dot={false} activeDot={false} connectNulls
-            isAnimationActive={false} legendType="none" />
-        )}
-        {/* Invisible: carries goalWeight into tooltip payload */}
-        {goal && (
-          <Line type="linear" dataKey="goalWeight" stroke="none" strokeWidth={0}
-            dot={false} activeDot={false} connectNulls
-            animationDuration={0} legendType="none" />
-        )}
+          {/* Visual goal line: purple dashed, exactly 2 anchor points */}
+          {goal && goalAnchors && goalAnchors.length > 0 && (
+            <Line data={goalAnchors} type="linear" dataKey="gw"
+              stroke="#a855f7" strokeWidth={1.5} strokeDasharray="5 5"
+              dot={false} activeDot={false} connectNulls
+              isAnimationActive={false} legendType="none" />
+          )}
+          {/* Invisible: carries goalWeight into tooltip payload */}
+          {goal && (
+            <Line type="linear" dataKey="goalWeight" stroke="none" strokeWidth={0}
+              dot={false} activeDot={false} connectNulls
+              animationDuration={0} legendType="none" />
+          )}
 
-        {/* Each color run as its own Line with a full-length sparse data array */}
-        {colorRuns.map((run, i) => (
-          <Line key={i} data={run.data} type="monotone" dataKey="w"
-            stroke={run.stroke} strokeWidth={2} dot={false} activeDot={false}
-            connectNulls={false} isAnimationActive={false} legendType="none" />
-        ))}
+          {colorRuns.map((run, i) => (
+            <Line key={i} data={run.data} type="monotone" dataKey="w"
+              stroke={run.stroke} strokeWidth={2} dot={false} activeDot={false}
+              connectNulls={false} isAnimationActive={false} legendType="none" />
+          ))}
 
-        {/* Invisible line — carries dots and tooltip, uses main data */}
-        <Line type="monotone" dataKey="weight" stroke="none" strokeWidth={0}
-          dot={<CustomDot />} activeDot={<ActiveDot />}
-          connectNulls animationDuration={300} legendType="none" />
-      </ComposedChart>
-    </ResponsiveContainer>
+          <Line type="monotone" dataKey="weight" stroke="none" strokeWidth={0}
+            dot={<CustomDot />} activeDot={<ActiveDot />}
+            connectNulls animationDuration={300} legendType="none" />
+        </ComposedChart>
+      </ResponsiveContainer>
+    </div>
   );
 }

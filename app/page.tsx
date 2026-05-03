@@ -8,7 +8,6 @@ import WeightHistory from '@/components/WeightHistory';
 import GoalSettings from '@/components/GoalSettings';
 import SettingsTab from '@/components/SettingsTab';
 import LogModal from '@/components/LogModal';
-import CSVImport from '@/components/CSVImport';
 import { getEntries, getGoal } from '@/lib/storage';
 import { getUnit, Unit } from '@/lib/units';
 import { WeightEntry, Goal } from '@/types';
@@ -58,7 +57,6 @@ export default function Home() {
         {tab === 'history' && (
           <div className="px-4 py-4 space-y-4">
             <WeightHistory entries={entries} unit={unit} onChange={reload} />
-            <CSVImport onImport={reload} />
           </div>
         )}
 
@@ -73,6 +71,7 @@ export default function Home() {
             onUnitChange={setUnit}
             installPrompt={installPrompt}
             onInstalled={() => setInstallPrompt(null)}
+            onImport={reload}
           />
         )}
       </div>
