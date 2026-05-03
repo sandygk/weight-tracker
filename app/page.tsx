@@ -68,7 +68,7 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-20">
+    <main className="bg-gray-50 dark:bg-gray-950 pb-20">
       {tab !== 'chart' && (
         <header className="px-5 pt-5 pb-1">
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">
