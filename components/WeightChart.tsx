@@ -6,6 +6,7 @@ import {
 import { WeightEntry, Goal } from '@/types';
 import { goalEndDate, expectedWeightOnDate } from '@/lib/goalCalculator';
 import { Unit, toDisplay } from '@/lib/units';
+import { useIsDark } from '@/lib/theme';
 
 interface ChartPoint {
   date: string;
@@ -147,9 +148,11 @@ interface Props {
 }
 
 export default function WeightChart({ entries, goal, unit, extendGoalLine = false }: Props) {
+  const isDark = useIsDark();
+
   if (entries.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-56 gap-3 text-gray-300">
+      <div className="flex flex-col items-center justify-center h-56 gap-3 text-gray-300 dark:text-gray-600">
         <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="m19 9-5 5-4-4-3 3"/></svg>
         <p className="text-sm">No data for this range</p>
       </div>
@@ -190,7 +193,7 @@ export default function WeightChart({ entries, goal, unit, extendGoalLine = fals
   const ActiveDot = (props: any) => {
     const { cx, cy, payload } = props;
     if (cx == null || cy == null) return null;
-    return <circle cx={cx} cy={cy} r={6} fill={getDotColor(payload)} stroke="white" strokeWidth={2} />;
+    return <circle cx={cx} cy={cy} r={6} fill={getDotColor(payload)} stroke={isDark ? '#030712' : 'white'} strokeWidth={2} />;
   };
 
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -218,8 +221,8 @@ export default function WeightChart({ entries, goal, unit, extendGoalLine = fals
       : null;
 
     return (
-      <div className="bg-white border border-gray-100 rounded-xl px-3 py-2 shadow-md text-xs max-w-48">
-        <p className="font-semibold text-gray-600 mb-1">{dateLabel}</p>
+      <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl px-3 py-2 shadow-md text-xs max-w-48">
+        <p className="font-semibold text-gray-600 dark:text-gray-300 mb-1">{dateLabel}</p>
         {wp && <p className={weightClass}>Weight: <strong>{wp.value} {unit}</strong></p>}
         {goalForDateDisplay != null && (
           <p className="text-purple-500">Target: <strong>{goalForDateDisplay} {unit}</strong></p>
@@ -229,7 +232,7 @@ export default function WeightChart({ entries, goal, unit, extendGoalLine = fals
             {delta > 0 ? '+' : ''}{delta} {unit}
           </p>
         )}
-        {wp?.payload?.note && <p className="text-gray-500 mt-1">{wp.payload.note}</p>}
+        {wp?.payload?.note && <p className="text-gray-500 dark:text-gray-400 mt-1">{wp.payload.note}</p>}
       </div>
     );
   };
@@ -238,17 +241,17 @@ export default function WeightChart({ entries, goal, unit, extendGoalLine = fals
     <div style={{ outline: 'none', WebkitTapHighlightColor: 'transparent' }}>
       <ResponsiveContainer width="100%" height={260}>
         <ComposedChart data={data} margin={{ top: 4, right: 12, left: -20, bottom: 0 }} tabIndex={-1}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#1f2937' : '#f3f4f6'} vertical={false} />
           <XAxis
             type="number" dataKey="ts" scale="time"
             domain={['dataMin', 'dataMax']}
             ticks={data.map(p => p.ts)}
             interval="preserveStartEnd"
             tickFormatter={(ts: number) => fmt(new Date(ts).toISOString().split('T')[0])}
-            tick={{ fontSize: 10, fill: '#9ca3af' }}
+            tick={{ fontSize: 10, fill: isDark ? '#6b7280' : '#9ca3af' }}
             axisLine={false} tickLine={false}
           />
-          <YAxis domain={[yMin, yMax]} tick={{ fontSize: 10, fill: '#9ca3af' }}
+          <YAxis domain={[yMin, yMax]} tick={{ fontSize: 10, fill: isDark ? '#6b7280' : '#9ca3af' }}
             axisLine={false} tickLine={false} />
           <Tooltip content={<CustomTooltip />} cursor={false} />
 

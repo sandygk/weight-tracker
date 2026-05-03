@@ -17,7 +17,7 @@ const tabs: { id: Tab; label: string; Icon: React.ElementType }[] = [
 
 export default function BottomNav({ active, onChange }: Props) {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 flex">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 flex">
       {tabs.map(({ id, label, Icon }) => (
         <button
           key={id}
@@ -25,7 +25,7 @@ export default function BottomNav({ active, onChange }: Props) {
           onClick={() => onChange(id)}
           style={{ touchAction: 'manipulation' }}
           className={`flex-1 flex flex-col items-center gap-1 py-3 text-xs font-medium transition-colors ${
-            active === id ? 'text-blue-600' : 'text-gray-400'
+            active === id ? 'text-blue-500' : 'text-gray-400 dark:text-gray-500'
           }`}
         >
           <Icon size={20} strokeWidth={active === id ? 2.5 : 1.5} />

@@ -114,7 +114,7 @@ function DrumCol({ value, min, max, wrap = false, onChange }: DrumColProps) {
       onMouseDown={handleMouseDown}
     >
       <div
-        className="absolute inset-x-0 border-t border-b border-gray-200 pointer-events-none"
+        className="absolute inset-x-0 border-t border-b border-gray-200 dark:border-gray-600 pointer-events-none"
         style={{ top: ROW_H, height: ROW_H }}
       />
       <div
@@ -132,8 +132,8 @@ function DrumCol({ value, min, max, wrap = false, onChange }: DrumColProps) {
               key={delta}
               className={`flex items-center justify-center ${
                 delta === 0
-                  ? 'text-3xl font-bold text-gray-900'
-                  : 'text-2xl font-light text-gray-300'
+                  ? 'text-3xl font-bold text-gray-900 dark:text-gray-100'
+                  : 'text-2xl font-light text-gray-300 dark:text-gray-600'
               } ${!inRange ? 'invisible' : ''}`}
               style={{ height: ROW_H }}
             >
@@ -174,16 +174,16 @@ export default function LogModal({ entries, unit, onSave, onClose }: Props) {
       onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}
       onTouchEnd={e => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="bg-white rounded-2xl w-full max-w-xs shadow-2xl">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-xs shadow-2xl">
         <div className="px-6 pt-6 pb-1">
-          <h2 className="text-2xl font-bold text-gray-900">Weight</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Weight</h2>
         </div>
 
         <div className="px-4 py-4 flex items-center justify-center gap-1">
           <DrumCol value={whole} min={wholeMin} max={wholeMax} onChange={setWhole} />
-          <span className="text-3xl font-bold text-gray-400 self-center mx-1" style={{ marginTop: 2 }}>.</span>
+          <span className="text-3xl font-bold text-gray-400 dark:text-gray-500 self-center mx-1" style={{ marginTop: 2 }}>.</span>
           <DrumCol value={decimal} min={0} max={9} wrap onChange={setDecimal} />
-          <span className="text-lg font-medium text-gray-400 self-center ml-2">{unit}</span>
+          <span className="text-lg font-medium text-gray-400 dark:text-gray-500 self-center ml-2">{unit}</span>
         </div>
 
         <div className="px-5 pb-3">
@@ -193,19 +193,19 @@ export default function LogModal({ entries, unit, onSave, onClose }: Props) {
             onChange={e => setNote(e.target.value)}
             placeholder="Add a note (optional)"
             maxLength={120}
-            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:placeholder-gray-500 rounded-xl px-3 py-2 text-sm text-gray-700 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
 
-        <div className="flex items-center px-5 pb-4 pt-2 border-t border-gray-100">
-          <span className="text-sm text-gray-400 font-medium flex-1">
+        <div className="flex items-center px-5 pb-4 pt-2 border-t border-gray-100 dark:border-gray-700">
+          <span className="text-sm text-gray-400 dark:text-gray-500 font-medium flex-1">
             {formatDateShort(todayStr)}
           </span>
           <button
             type="button"
             onClick={onClose}
             style={{ touchAction: 'manipulation' }}
-            className="px-3 py-2 text-sm font-semibold text-gray-400 uppercase tracking-wider"
+            className="px-3 py-2 text-sm font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider"
           >
             Cancel
           </button>

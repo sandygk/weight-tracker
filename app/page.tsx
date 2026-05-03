@@ -9,6 +9,7 @@ import SettingsTab from '@/components/SettingsTab';
 import LogModal from '@/components/LogModal';
 import { getEntries, getGoal } from '@/lib/storage';
 import { getUnit, Unit } from '@/lib/units';
+import { getTheme, applyTheme } from '@/lib/theme';
 import { WeightEntry, Goal } from '@/types';
 
 const TAB_TITLES: Record<Tab, string> = {
@@ -51,6 +52,13 @@ export default function Home() {
   useEffect(() => { reload(); }, [reload]);
 
   useEffect(() => {
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = () => { if (getTheme() === 'system') applyTheme('system'); };
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  useEffect(() => {
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
     // Pick up the event if it fired before React mounted
     if ((window as any).__pwaPrompt) setInstallPrompt((window as any).__pwaPrompt);
@@ -60,13 +68,13 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-white pb-20">
+    <main className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-20">
       {tab !== 'chart' && (
         <header className="px-5 pt-5 pb-1">
-          <h1 className="text-xl font-bold text-gray-900">
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">
             {TAB_TITLES[tab]}
             {tab === 'history' && (
-              <span className="text-sm font-normal text-gray-400 ml-2">{entries.length} entries</span>
+              <span className="text-sm font-normal text-gray-400 dark:text-gray-500 ml-2">{entries.length} entries</span>
             )}
           </h1>
         </header>

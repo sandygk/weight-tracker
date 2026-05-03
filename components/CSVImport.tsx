@@ -48,20 +48,20 @@ export default function CSVImport({ onImport }: Props) {
         <CardTitle className="text-base">Import from WeightFit</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        <p className="text-sm text-gray-500">Import a WeightFit CSV export. Duplicate dates will be updated.</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">Import a WeightFit CSV export. Duplicate dates will be updated.</p>
         <input
           type="file"
           accept=".csv"
           onChange={handleFile}
-          className="block w-full text-sm text-gray-500
+          className="block w-full text-sm text-gray-500 dark:text-gray-400
             file:mr-3 file:py-2 file:px-4
             file:rounded-lg file:border-0
             file:text-sm file:font-medium
-            file:bg-blue-50 file:text-blue-600
-            hover:file:bg-blue-100
+            file:bg-blue-50 dark:file:bg-blue-900/40 file:text-blue-600 dark:file:text-blue-400
+            hover:file:bg-blue-100 dark:hover:file:bg-blue-900/60
             file:cursor-pointer cursor-pointer"
         />
-        {status && <p className="text-sm text-green-600 font-medium">{status}</p>}
+        {status && <p className="text-sm text-green-600 dark:text-green-400 font-medium">{status}</p>}
       </CardContent>
     </Card>
   );

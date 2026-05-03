@@ -155,13 +155,13 @@ export default function GoalSettings({ goal, entries, unit, onSave }: Props) {
           </div>
 
           {preview && weeksNeeded && (
-            <div className="rounded-xl bg-blue-50 border border-blue-100 px-4 py-3 flex items-center gap-3">
-              <div className="shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                <Target size={15} className="text-blue-500" />
+            <div className="rounded-xl bg-blue-50 dark:bg-blue-950/50 border border-blue-100 dark:border-blue-900 px-4 py-3 flex items-center gap-3">
+              <div className="shrink-0 w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                <Target size={15} className="text-blue-500 dark:text-blue-400" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-blue-800">{formatPreview(preview)}</p>
-                <p className="text-xs text-blue-400 mt-0.5">
+                <p className="text-sm font-semibold text-blue-800 dark:text-blue-200">{formatPreview(preview)}</p>
+                <p className="text-xs text-blue-400 dark:text-blue-500 mt-0.5">
                   {weeksNeeded} wks · {isGainGoalForm ? 'gaining' : 'losing'} {(Math.abs(sw - gw) / weeksNeeded).toFixed(1)} {unit}/wk
                 </p>
               </div>
@@ -169,7 +169,7 @@ export default function GoalSettings({ goal, entries, unit, onSave }: Props) {
           )}
 
           {sw === gw && !isNaN(sw) && !isNaN(gw) && sw > 0 && (
-            <p className="text-xs text-amber-600">
+            <p className="text-xs text-amber-600 dark:text-amber-400">
               Goal weight must differ from start weight.
             </p>
           )}
@@ -178,7 +178,7 @@ export default function GoalSettings({ goal, entries, unit, onSave }: Props) {
             <button
               type="button"
               onClick={handleClear}
-              className="w-full rounded-xl border border-red-100 bg-red-50 text-red-400 text-sm font-medium py-2.5 flex items-center justify-center gap-2 hover:bg-red-100 hover:text-red-500 transition-colors"
+              className="w-full rounded-xl border border-red-100 dark:border-red-900/50 bg-red-50 dark:bg-red-950/50 text-red-400 dark:text-red-400 text-sm font-medium py-2.5 flex items-center justify-center gap-2 hover:bg-red-100 dark:hover:bg-red-900/50 hover:text-red-500 transition-colors"
             >
               <Trash2 size={14} />
               Clear Goal

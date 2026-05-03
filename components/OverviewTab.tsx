@@ -118,10 +118,10 @@ export default function OverviewTab({ entries, goal, unit }: Props) {
 
   if (entries.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 gap-3 text-gray-300">
+      <div className="flex flex-col items-center justify-center py-24 gap-3 text-gray-300 dark:text-gray-600">
         <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="m19 9-5 5-4-4-3 3"/></svg>
-        <p className="text-sm font-medium text-gray-400">No data yet</p>
-        <p className="text-xs text-gray-300 text-center px-8">Tap + to log your weight, or import a CSV</p>
+        <p className="text-sm font-medium text-gray-400 dark:text-gray-500">No data yet</p>
+        <p className="text-xs text-gray-300 dark:text-gray-600 text-center px-8">Tap + to log your weight, or import a CSV</p>
       </div>
     );
   }
@@ -130,11 +130,11 @@ export default function OverviewTab({ entries, goal, unit }: Props) {
     <div className="flex flex-col pt-4 pb-2">
       {/* Title + range picker */}
       <div className="flex items-center justify-between px-5 mb-4">
-        <h1 className="text-xl font-bold text-gray-900">Overview</h1>
+        <h1 className="text-xl font-bold text-gray-900 dark:text-white">Overview</h1>
         <select
           value={activeRange}
           onChange={e => handleRangeChange(e.target.value as RangeLabel)}
-          className="text-xs font-semibold bg-gray-100 text-gray-600 rounded-full px-3 py-1.5 border-0 cursor-pointer focus:outline-none"
+          className="text-xs font-semibold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full px-3 py-1.5 border-0 cursor-pointer focus:outline-none"
         >
           {STATIC_RANGES.map(r => (
             <option key={r.label} value={r.label}>{r.name}</option>
@@ -148,24 +148,24 @@ export default function OverviewTab({ entries, goal, unit }: Props) {
       <div className="grid grid-cols-3 text-center px-2 pb-4">
         {/* Start */}
         <div className="flex flex-col items-center gap-0.5 px-1">
-          <p className="text-xs text-gray-400">Start · {overallFirst ? formatShortDate(overallFirst.date) : '—'}</p>
-          <p className="text-2xl font-bold text-gray-700 leading-tight">
+          <p className="text-xs text-gray-400 dark:text-gray-500">Start · {overallFirst ? formatShortDate(overallFirst.date) : '—'}</p>
+          <p className="text-2xl font-bold text-gray-700 dark:text-gray-200 leading-tight">
             {overallFirst ? toDisplay(overallFirst.weight, unit) : '—'}
-            {overallFirst && <span className="text-sm font-medium text-gray-500 ml-0.5">{unit}</span>}
+            {overallFirst && <span className="text-sm font-medium text-gray-500 dark:text-gray-400 ml-0.5">{unit}</span>}
           </p>
           {totalChange !== null && (
             <>
               <p className={`text-xs font-semibold ${totalChange === 0 ? 'text-gray-400' : (totalChange > 0) === isGainGoal ? 'text-green-500' : 'text-red-500'}`}>
                 {totalChange > 0 ? '+' : ''}{totalChange} {unit}
               </p>
-              <p className="text-gray-400 font-normal" style={{ fontSize: 10 }}>since start</p>
+              <p className="text-gray-400 dark:text-gray-500 font-normal" style={{ fontSize: 10 }}>since start</p>
             </>
           )}
         </div>
 
         {/* Today */}
-        <div className="flex flex-col items-center gap-0.5 px-1 border-x border-gray-100">
-          <p className="text-xs text-gray-400">Today · {formatShortDate(todayStr)}</p>
+        <div className="flex flex-col items-center gap-0.5 px-1 border-x border-gray-100 dark:border-gray-700">
+          <p className="text-xs text-gray-400 dark:text-gray-500">Today · {formatShortDate(todayStr)}</p>
           <p className={`text-2xl font-bold leading-tight ${currentColor}`}>
             {latest ? toDisplay(latest.weight, unit) : '—'}
             {latest && <span className="text-sm font-medium ml-0.5 opacity-70">{unit}</span>}
@@ -175,17 +175,17 @@ export default function OverviewTab({ entries, goal, unit }: Props) {
               <p className={`text-xs font-semibold ${deltaColor}`}>
                 {todayDelta > 0 ? '+' : ''}{todayDelta} {unit}
               </p>
-              <p className="text-gray-400 font-normal" style={{ fontSize: 10 }}>from target</p>
+              <p className="text-gray-400 dark:text-gray-500 font-normal" style={{ fontSize: 10 }}>from target</p>
             </>
           )}
         </div>
 
         {/* End Goal */}
         <div className="flex flex-col items-center gap-0.5 px-1">
-          <p className="text-xs text-gray-400">End · {goalEnd ? formatShortDate(goalEnd) : '—'}</p>
-          <p className="text-2xl font-bold text-gray-700 leading-tight">
+          <p className="text-xs text-gray-400 dark:text-gray-500">End · {goalEnd ? formatShortDate(goalEnd) : '—'}</p>
+          <p className="text-2xl font-bold text-gray-700 dark:text-gray-200 leading-tight">
             {goal ? toDisplay(goal.goalWeight, unit) : '—'}
-            {goal && <span className="text-sm font-medium text-gray-500 ml-0.5">{unit}</span>}
+            {goal && <span className="text-sm font-medium text-gray-500 dark:text-gray-400 ml-0.5">{unit}</span>}
           </p>
           {remainingToGoal !== null && (
             (isGainGoal ? remainingToGoal >= 0 : remainingToGoal <= 0)
@@ -194,7 +194,7 @@ export default function OverviewTab({ entries, goal, unit }: Props) {
                   <p className="text-xs font-semibold text-purple-500">
                     {Math.abs(remainingToGoal).toFixed(1)} {unit}
                   </p>
-                  <p className="text-gray-400 font-normal" style={{ fontSize: 10 }}>{isGainGoal ? 'to gain' : 'to go'}</p>
+                  <p className="text-gray-400 dark:text-gray-500 font-normal" style={{ fontSize: 10 }}>{isGainGoal ? 'to gain' : 'to go'}</p>
                 </>
           )}
         </div>

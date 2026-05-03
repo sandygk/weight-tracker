@@ -65,7 +65,7 @@ export default function WeightHistory({ entries, unit, goal, onChange }: Props) 
   }
 
   if (sorted.length === 0) {
-    return <p className="text-center text-gray-400 text-sm py-6">No entries yet.</p>;
+    return <p className="text-center text-gray-400 dark:text-gray-500 text-sm py-6">No entries yet.</p>;
   }
 
   const diffs = new Map<string, number>();
@@ -79,14 +79,14 @@ export default function WeightHistory({ entries, unit, goal, onChange }: Props) 
   return (
     <>
       <div>
-          <ul className="divide-y divide-gray-100">
+          <ul className="divide-y divide-gray-100 dark:divide-gray-700">
             {sorted.map(entry => {
               const diff = diffs.get(entry.id);
               return (
                 <li key={entry.id} className="px-4 py-3">
                   <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-800">{formatDate(entry.date)}</p>
+                    <p className="text-sm font-medium text-gray-800 dark:text-gray-100">{formatDate(entry.date)}</p>
                     {diff !== undefined && (
                       <p className={`text-xs ${diff === 0 ? 'text-gray-400' : (diff > 0) === isGainGoal ? 'text-green-500' : 'text-red-400'}`}>
                         {diff > 0 ? `+${diff}` : diff} {unit}
@@ -100,7 +100,7 @@ export default function WeightHistory({ entries, unit, goal, onChange }: Props) 
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-gray-300 hover:text-blue-400 h-8 w-8 p-0"
+                      className="text-gray-300 dark:text-gray-600 hover:text-blue-400 h-8 w-8 p-0"
                       onClick={() => openNoteEditor(entry)}
                     >
                       <NotebookPen size={14} />
@@ -108,7 +108,7 @@ export default function WeightHistory({ entries, unit, goal, onChange }: Props) 
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-gray-300 hover:text-red-400 h-8 w-8 p-0"
+                      className="text-gray-300 dark:text-gray-600 hover:text-red-400 h-8 w-8 p-0"
                       onClick={() => setPendingDelete(entry)}
                     >
                       <Trash2 size={14} />
@@ -116,7 +116,7 @@ export default function WeightHistory({ entries, unit, goal, onChange }: Props) 
                   </div>
                   </div>
                   {entry.note && (
-                    <p className="text-xs text-gray-400 mt-1">{entry.note}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{entry.note}</p>
                   )}
                 </li>
               );
@@ -130,7 +130,7 @@ export default function WeightHistory({ entries, unit, goal, onChange }: Props) 
           <DialogHeader>
             <DialogTitle>Delete entry?</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             {pendingDelete && `${formatDate(pendingDelete.date)} · ${toDisplay(pendingDelete.weight, unit)} ${unit}`}
           </p>
           <DialogFooter>
@@ -148,7 +148,7 @@ export default function WeightHistory({ entries, unit, goal, onChange }: Props) 
               {editingNote?.note ? 'Edit note' : 'Add note'}
             </DialogTitle>
           </DialogHeader>
-          <p className="text-xs text-gray-400 -mt-1">
+          <p className="text-xs text-gray-400 dark:text-gray-500 -mt-1">
             {editingNote && `${formatDate(editingNote.date)} · ${toDisplay(editingNote.weight, unit)} ${unit}`}
           </p>
           <textarea
@@ -158,7 +158,7 @@ export default function WeightHistory({ entries, unit, goal, onChange }: Props) 
             maxLength={120}
             rows={3}
             autoFocus
-            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 placeholder-gray-300 resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:placeholder-gray-500 rounded-xl px-3 py-2 text-sm text-gray-700 placeholder-gray-300 resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
           <DialogFooter>
             <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
