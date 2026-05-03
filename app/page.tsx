@@ -5,7 +5,6 @@ import { Plus } from 'lucide-react';
 import BottomNav, { Tab } from '@/components/BottomNav';
 import OverviewTab from '@/components/OverviewTab';
 import WeightHistory from '@/components/WeightHistory';
-import GoalSettings from '@/components/GoalSettings';
 import SettingsTab from '@/components/SettingsTab';
 import LogModal from '@/components/LogModal';
 import { getEntries, getGoal } from '@/lib/storage';
@@ -15,12 +14,18 @@ import { WeightEntry, Goal } from '@/types';
 const TAB_TITLES: Record<Tab, string> = {
   chart: 'Overview',
   history: 'History',
-  goal: 'Goal',
   settings: 'Settings',
 };
 
+function getTabFromHash(): Tab {
+  if (typeof window === 'undefined') return 'chart';
+  const hash = window.location.hash.slice(1);
+  const valid: Tab[] = ['chart', 'history', 'settings'];
+  return valid.includes(hash as Tab) ? (hash as Tab) : 'chart';
+}
+
 export default function Home() {
-  const [tab, setTab] = useState<Tab>('chart');
+  const [tab, setTab] = useState<Tab>(() => getTabFromHash());
   const [entries, setEntries] = useState<WeightEntry[]>([]);
   const [goal, setGoal] = useState<Goal | null>(null);
   const [unit, setUnit] = useState<Unit>(() => getUnit());
@@ -30,6 +35,17 @@ export default function Home() {
   const reload = useCallback(() => {
     setEntries(getEntries());
     setGoal(getGoal());
+  }, []);
+
+  const handleTabChange = useCallback((t: Tab) => {
+    setTab(t);
+    window.location.hash = t;
+  }, []);
+
+  useEffect(() => {
+    const onHashChange = () => setTab(getTabFromHash());
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
   useEffect(() => { reload(); }, [reload]);
@@ -47,7 +63,12 @@ export default function Home() {
     <main className="min-h-screen bg-white pb-20">
       {tab !== 'chart' && (
         <header className="px-5 pt-5 pb-1">
-          <h1 className="text-xl font-bold text-gray-900">{TAB_TITLES[tab]}</h1>
+          <h1 className="text-xl font-bold text-gray-900">
+            {TAB_TITLES[tab]}
+            {tab === 'history' && (
+              <span className="text-sm font-normal text-gray-400 ml-2">{entries.length} entries</span>
+            )}
+          </h1>
         </header>
       )}
 
@@ -56,13 +77,7 @@ export default function Home() {
 
         {tab === 'history' && (
           <div className="px-4 py-4 space-y-4">
-            <WeightHistory entries={entries} unit={unit} onChange={reload} />
-          </div>
-        )}
-
-        {tab === 'goal' && (
-          <div className="px-4 py-4">
-            <GoalSettings key={unit} goal={goal} entries={entries} unit={unit} onSave={reload} />
+            <WeightHistory entries={entries} unit={unit} goal={goal} onChange={reload} />
           </div>
         )}
 
@@ -72,25 +87,27 @@ export default function Home() {
             installPrompt={installPrompt}
             onInstalled={() => setInstallPrompt(null)}
             onImport={reload}
+            goal={goal}
+            entries={entries}
           />
         )}
       </div>
 
       {/* FAB */}
-      <button
+      {tab === 'chart' && <button
         type="button"
         onClick={() => setShowLog(true)}
         style={{ touchAction: 'manipulation', bottom: '80px' }}
         className="fixed left-1/2 -translate-x-1/2 z-40 w-14 h-14 bg-blue-500 rounded-full shadow-lg flex items-center justify-center active:bg-blue-700 transition-colors"
       >
         <Plus size={24} color="white" strokeWidth={2.5} />
-      </button>
+      </button>}
 
       {showLog && (
         <LogModal entries={entries} unit={unit} onSave={reload} onClose={() => setShowLog(false)} />
       )}
 
-      <BottomNav active={tab} onChange={setTab} />
+      <BottomNav active={tab} onChange={handleTabChange} />
     </main>
   );
 }

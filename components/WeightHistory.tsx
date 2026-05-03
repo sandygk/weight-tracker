@@ -1,21 +1,34 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
   DialogFooter, DialogClose,
 } from '@/components/ui/dialog';
 import { deleteEntry, upsertEntry } from '@/lib/storage';
-import { WeightEntry } from '@/types';
+import { WeightEntry, Goal } from '@/types';
 import { Unit, toDisplay } from '@/lib/units';
+import { expectedWeightOnDate } from '@/lib/goalCalculator';
 import { Trash2, NotebookPen } from 'lucide-react';
 
 interface Props {
   entries: WeightEntry[];
   unit: Unit;
+  goal: Goal | null;
   onChange: () => void;
+}
+
+function entryColor(entry: WeightEntry, goal: Goal | null, unit: Unit): string {
+  if (!goal || entry.date < goal.startDate) return 'text-blue-600';
+  const exp = expectedWeightOnDate(goal, entry.date);
+  if (exp == null) return 'text-blue-600';
+  const raw = toDisplay(entry.weight, unit) - toDisplay(exp, unit);
+  const diff = goal.goalWeight > goal.startWeight ? -raw : raw;
+  if (diff <= -1) return 'text-green-500';
+  if (diff <= 0) return 'text-lime-500';
+  if (diff <= 1) return 'text-orange-500';
+  return 'text-red-500';
 }
 
 function formatDate(dateStr: string): string {
@@ -25,7 +38,8 @@ function formatDate(dateStr: string): string {
   });
 }
 
-export default function WeightHistory({ entries, unit, onChange }: Props) {
+export default function WeightHistory({ entries, unit, goal, onChange }: Props) {
+  const isGainGoal = !!(goal && goal.goalWeight > goal.startWeight);
   const sorted = [...entries].sort((a, b) => b.date.localeCompare(a.date));
   const [pendingDelete, setPendingDelete] = useState<WeightEntry | null>(null);
   const [editingNote, setEditingNote] = useState<WeightEntry | null>(null);
@@ -51,13 +65,7 @@ export default function WeightHistory({ entries, unit, onChange }: Props) {
   }
 
   if (sorted.length === 0) {
-    return (
-      <Card>
-        <CardContent className="pt-6 text-center text-gray-400 text-sm">
-          No entries yet.
-        </CardContent>
-      </Card>
-    );
+    return <p className="text-center text-gray-400 text-sm py-6">No entries yet.</p>;
   }
 
   const diffs = new Map<string, number>();
@@ -70,29 +78,23 @@ export default function WeightHistory({ entries, unit, onChange }: Props) {
 
   return (
     <>
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">History ({sorted.length} entries)</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
+      <div>
           <ul className="divide-y divide-gray-100">
             {sorted.map(entry => {
               const diff = diffs.get(entry.id);
               return (
-                <li key={entry.id} className="flex items-center justify-between px-4 py-3">
+                <li key={entry.id} className="px-4 py-3">
+                  <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-800">{formatDate(entry.date)}</p>
                     {diff !== undefined && (
-                      <p className={`text-xs ${diff > 0 ? 'text-red-400' : diff < 0 ? 'text-green-500' : 'text-gray-400'}`}>
+                      <p className={`text-xs ${diff === 0 ? 'text-gray-400' : (diff > 0) === isGainGoal ? 'text-green-500' : 'text-red-400'}`}>
                         {diff > 0 ? `+${diff}` : diff} {unit}
                       </p>
                     )}
-                    {entry.note && (
-                      <p className="text-xs text-gray-400 mt-0.5 truncate">{entry.note}</p>
-                    )}
                   </div>
                   <div className="flex items-center gap-1 ml-3">
-                    <span className="text-base font-semibold text-blue-600 mr-1">
+                    <span className={`text-base font-semibold mr-1 ${entryColor(entry, goal, unit)}`}>
                       {toDisplay(entry.weight, unit)} {unit}
                     </span>
                     <Button
@@ -112,12 +114,15 @@ export default function WeightHistory({ entries, unit, onChange }: Props) {
                       <Trash2 size={14} />
                     </Button>
                   </div>
+                  </div>
+                  {entry.note && (
+                    <p className="text-xs text-gray-400 mt-1">{entry.note}</p>
+                  )}
                 </li>
               );
             })}
           </ul>
-        </CardContent>
-      </Card>
+      </div>
 
       {/* Delete confirmation */}
       <Dialog open={!!pendingDelete} onOpenChange={open => { if (!open) setPendingDelete(null); }}>

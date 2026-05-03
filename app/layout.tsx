@@ -34,8 +34,6 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geistSans.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-gray-50">
-        {/* Capture beforeinstallprompt synchronously before React hydrates */}
-        <script dangerouslySetInnerHTML={{ __html: "if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js');window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__pwaPrompt=e;});" }} />
         {children}
       </body>
     </html>

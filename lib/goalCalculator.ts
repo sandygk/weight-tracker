@@ -7,7 +7,7 @@ export interface GoalPoint {
 
 export function goalEndDate(goal: Goal): string | null {
   if (!goal.weeklyLoss || goal.weeklyLoss <= 0) return null;
-  const weeksNeeded = (goal.startWeight - goal.goalWeight) / goal.weeklyLoss;
+  const weeksNeeded = Math.abs(goal.startWeight - goal.goalWeight) / goal.weeklyLoss;
   if (weeksNeeded <= 0) return null;
   const d = new Date(goal.startDate + 'T12:00:00');
   d.setDate(d.getDate() + Math.ceil(weeksNeeded * 7));

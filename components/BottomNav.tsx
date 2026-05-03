@@ -1,8 +1,8 @@
 'use client';
 
-import { LineChart, List, Target, Settings } from 'lucide-react';
+import { LineChart, List, Settings } from 'lucide-react';
 
-export type Tab = 'chart' | 'history' | 'goal' | 'settings';
+export type Tab = 'chart' | 'history' | 'settings';
 
 interface Props {
   active: Tab;
@@ -12,7 +12,6 @@ interface Props {
 const tabs: { id: Tab; label: string; Icon: React.ElementType }[] = [
   { id: 'chart',    label: 'Overview', Icon: LineChart },
   { id: 'history',  label: 'History',  Icon: List },
-  { id: 'goal',     label: 'Goal',     Icon: Target },
   { id: 'settings', label: 'Settings', Icon: Settings },
 ];
 

@@ -4,11 +4,11 @@ import { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { saveGoal, clearGoal } from '@/lib/storage';
 import { goalEndDate } from '@/lib/goalCalculator';
 import { Goal, WeightEntry } from '@/types';
 import { Unit, toDisplay, toStorage } from '@/lib/units';
+import { Target, Trash2 } from 'lucide-react';
 
 interface Props {
   goal: Goal | null;
@@ -59,7 +59,7 @@ export default function GoalSettings({ goal, entries, unit, onSave }: Props) {
     const sw = parseFloat(startWeight);
     const gw = parseFloat(goalWeight);
     const wl = parseFloat(weeklyLoss);
-    if (isNaN(sw) || isNaN(gw) || isNaN(wl) || wl <= 0 || sw <= gw) return;
+    if (isNaN(sw) || isNaN(gw) || isNaN(wl) || wl <= 0 || sw === gw) return;
     const t = setTimeout(() => {
       saveGoal({
         startDate,
@@ -76,13 +76,15 @@ export default function GoalSettings({ goal, entries, unit, onSave }: Props) {
   const gw = parseFloat(goalWeight);
   const wl = parseFloat(weeklyLoss);
 
+  const isGainGoalForm = !isNaN(sw) && !isNaN(gw) && gw > sw;
+
   // preview uses display-unit values; since goalEndDate uses ratios (sw-gw)/wl the unit cancels out
-  const preview = !isNaN(sw) && !isNaN(gw) && !isNaN(wl) && wl > 0 && sw > gw
+  const preview = !isNaN(sw) && !isNaN(gw) && !isNaN(wl) && wl > 0 && sw !== gw
     ? goalEndDate({ startDate, startWeight: toStorage(sw, unit), goalWeight: toStorage(gw, unit), weeklyLoss: toStorage(wl, unit) })
     : null;
 
   const weeksNeeded = preview && !isNaN(sw) && !isNaN(gw) && !isNaN(wl)
-    ? Math.ceil((sw - gw) / wl)
+    ? Math.ceil(Math.abs(sw - gw) / wl)
     : null;
 
   function handleClear() {
@@ -138,7 +140,7 @@ export default function GoalSettings({ goal, entries, unit, onSave }: Props) {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="weeklyLoss">Loss per week ({unit})</Label>
+              <Label htmlFor="weeklyLoss">{isGainGoalForm ? 'Gain' : 'Loss'} per week ({unit})</Label>
               <Input
                 id="weeklyLoss"
                 type="number"
@@ -153,26 +155,34 @@ export default function GoalSettings({ goal, entries, unit, onSave }: Props) {
           </div>
 
           {preview && weeksNeeded && (
-            <div className="bg-blue-50 rounded-xl px-4 py-3 space-y-1">
-              <p className="text-sm font-semibold text-blue-800">
-                Goal reached by: {formatPreview(preview)}
-              </p>
-              <p className="text-xs text-blue-600">
-                {weeksNeeded} weeks · losing {((sw - gw) / weeksNeeded).toFixed(1)} {unit}/wk
-              </p>
+            <div className="rounded-xl bg-blue-50 border border-blue-100 px-4 py-3 flex items-center gap-3">
+              <div className="shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                <Target size={15} className="text-blue-500" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-blue-800">{formatPreview(preview)}</p>
+                <p className="text-xs text-blue-400 mt-0.5">
+                  {weeksNeeded} wks · {isGainGoalForm ? 'gaining' : 'losing'} {(Math.abs(sw - gw) / weeksNeeded).toFixed(1)} {unit}/wk
+                </p>
+              </div>
             </div>
           )}
 
-          {sw <= gw && !isNaN(sw) && !isNaN(gw) && sw > 0 && gw > 0 && (
+          {sw === gw && !isNaN(sw) && !isNaN(gw) && sw > 0 && (
             <p className="text-xs text-amber-600">
-              Goal weight must be less than start weight.
+              Goal weight must differ from start weight.
             </p>
           )}
 
           {goal && (
-            <Button type="button" variant="outline" onClick={handleClear} className="w-full text-red-500 border-red-200">
+            <button
+              type="button"
+              onClick={handleClear}
+              className="w-full rounded-xl border border-red-100 bg-red-50 text-red-400 text-sm font-medium py-2.5 flex items-center justify-center gap-2 hover:bg-red-100 hover:text-red-500 transition-colors"
+            >
+              <Trash2 size={14} />
               Clear Goal
-            </Button>
+            </button>
           )}
         </div>
       </CardContent>

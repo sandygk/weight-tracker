@@ -41,7 +41,8 @@ function segColor(p: ChartPoint, goal: Goal | null, unit: Unit): string {
   if (!goal || p.weight == null) return 'default';
   const exp = expectedWeightOnDate(goal, p.date);
   if (exp == null) return 'default';
-  const diff = p.weight - toDisplay(exp, unit);
+  const raw = p.weight - toDisplay(exp, unit);
+  const diff = goal.goalWeight > goal.startWeight ? -raw : raw;
   if (diff <= -1) return 'green';
   if (diff <= 0) return 'lime';
   if (diff <= 1) return 'orange';
@@ -167,7 +168,8 @@ export default function WeightChart({ entries, goal, unit, extendGoalLine = fals
     if (!goal || !payload?.date || payload.weight == null) return '#3b82f6';
     const exp = expectedWeightOnDate(goal, payload.date);
     if (exp == null) return '#3b82f6';
-    const diff = payload.weight - toDisplay(exp, unit);
+    const raw = payload.weight - toDisplay(exp, unit);
+    const diff = goal.goalWeight > goal.startWeight ? -raw : raw;
     if (diff <= -1) return '#22c55e';
     if (diff <= 0) return '#84cc16';
     if (diff <= 1) return '#f97316';
@@ -196,18 +198,37 @@ export default function WeightChart({ entries, goal, unit, extendGoalLine = fals
     const wp = payload.find((p: any) => p.dataKey === 'weight');
     const gp = payload.find((p: any) => p.dataKey === 'goalWeight');
     const anyPayload = payload[0]?.payload;
-    const dateLabel = anyPayload?.label ?? fmt(new Date(label).toISOString().split('T')[0]);
+    const dateLabel = wp?.payload?.date
+      ? new Date(wp.payload.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      : (anyPayload?.label ?? fmt(new Date(label).toISOString().split('T')[0]));
 
-    const colorKey = anyPayload?.date && wp?.value != null
-      ? segColor({ date: anyPayload.date, ts: anyPayload.ts ?? 0, label: dateLabel, weight: wp.value }, goal, unit)
+    const colorKey = wp?.payload?.date && wp?.value != null
+      ? segColor({ date: wp.payload.date, ts: wp.payload.ts ?? 0, label: dateLabel, weight: wp.value }, goal, unit)
       : 'default';
     const weightClass = TOOLTIP_CLASS[colorKey] ?? 'text-blue-600';
+
+    const goalForDate = goal && wp?.payload?.date
+      ? expectedWeightOnDate(goal, wp.payload.date)
+      : null;
+    const goalForDateDisplay = goalForDate != null
+      ? Math.round(toDisplay(goalForDate, unit) * 10) / 10
+      : null;
+    const delta = goalForDateDisplay != null && wp?.value != null
+      ? Math.round((Number(wp.value) - goalForDateDisplay) * 10) / 10
+      : null;
 
     return (
       <div className="bg-white border border-gray-100 rounded-xl px-3 py-2 shadow-md text-xs max-w-48">
         <p className="font-semibold text-gray-600 mb-1">{dateLabel}</p>
         {wp && <p className={weightClass}>Weight: <strong>{wp.value} {unit}</strong></p>}
-        {gp && <p className="text-purple-500">Goal: <strong>{Number(gp.value).toFixed(1)} {unit}</strong></p>}
+        {goalForDateDisplay != null && (
+          <p className="text-purple-500">Target: <strong>{goalForDateDisplay} {unit}</strong></p>
+        )}
+        {delta !== null && (
+          <p className={weightClass}>
+            {delta > 0 ? '+' : ''}{delta} {unit}
+          </p>
+        )}
         {wp?.payload?.note && <p className="text-gray-500 mt-1">{wp.payload.note}</p>}
       </div>
     );
@@ -216,7 +237,7 @@ export default function WeightChart({ entries, goal, unit, extendGoalLine = fals
   return (
     <div style={{ outline: 'none', WebkitTapHighlightColor: 'transparent' }}>
       <ResponsiveContainer width="100%" height={260}>
-        <ComposedChart data={data} margin={{ top: 4, right: 12, left: -20, bottom: 0 }}>
+        <ComposedChart data={data} margin={{ top: 4, right: 12, left: -20, bottom: 0 }} tabIndex={-1}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
           <XAxis
             type="number" dataKey="ts" scale="time"
@@ -229,7 +250,7 @@ export default function WeightChart({ entries, goal, unit, extendGoalLine = fals
           />
           <YAxis domain={[yMin, yMax]} tick={{ fontSize: 10, fill: '#9ca3af' }}
             axisLine={false} tickLine={false} />
-          <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#e5e7eb', strokeWidth: 1 }} />
+          <Tooltip content={<CustomTooltip />} cursor={false} />
 
           {/* Visual goal line: purple dashed, exactly 2 anchor points */}
           {goal && goalAnchors && goalAnchors.length > 0 && (

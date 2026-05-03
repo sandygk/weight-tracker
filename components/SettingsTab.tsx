@@ -6,15 +6,19 @@ import { Button } from '@/components/ui/button';
 import { Unit, getUnit, saveUnit } from '@/lib/units';
 import { exportCSV } from '@/lib/storage';
 import CSVImport from '@/components/CSVImport';
+import GoalSettings from '@/components/GoalSettings';
+import { Goal, WeightEntry } from '@/types';
 
 interface Props {
   onUnitChange: (unit: Unit) => void;
   installPrompt: any;
   onInstalled: () => void;
   onImport: () => void;
+  goal: Goal | null;
+  entries: WeightEntry[];
 }
 
-export default function SettingsTab({ onUnitChange, installPrompt, onInstalled, onImport }: Props) {
+export default function SettingsTab({ onUnitChange, installPrompt, onInstalled, onImport, goal, entries }: Props) {
   const [unit, setUnit] = useState<Unit>(() => getUnit());
   const [installed, setInstalled] = useState(
     () => typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches
@@ -51,6 +55,8 @@ export default function SettingsTab({ onUnitChange, installPrompt, onInstalled, 
 
   return (
     <div className="px-4 py-4 space-y-4">
+      <GoalSettings key={unit} goal={goal} entries={entries} unit={unit} onSave={onImport} />
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Units</CardTitle>
@@ -97,7 +103,7 @@ export default function SettingsTab({ onUnitChange, installPrompt, onInstalled, 
             Download CSV
           </Button>
           <p className="text-xs text-gray-400">
-            Exports all entries in {unit} with notes included. Compatible with the import format.
+            Exports all entries in {unit} with notes included.
           </p>
         </CardContent>
       </Card>
