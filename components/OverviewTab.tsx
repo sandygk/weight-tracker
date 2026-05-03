@@ -144,14 +144,14 @@ export default function OverviewTab({ entries, goal, unit }: Props) {
       <div className="grid grid-cols-3 text-center px-2 pb-4">
         {/* Start */}
         <div className="flex flex-col items-center gap-0.5 px-1">
-          <p className="text-xs text-gray-400 mb-0.5">Start</p>
+          <p className="text-xs text-gray-400">Start</p>
+          <p className="text-xs text-gray-400">{overallFirst ? formatShortDate(overallFirst.date) : '—'}</p>
           <p className="text-2xl font-bold text-gray-700 leading-tight">
             {overallFirst ? toDisplay(overallFirst.weight, unit) : '—'}
             {overallFirst && <span className="text-sm font-medium text-gray-500 ml-0.5">{unit}</span>}
           </p>
-          <p className="text-xs text-gray-400">{overallFirst ? formatShortDate(overallFirst.date) : '—'}</p>
           {totalChange !== null && (
-            <p className={`text-xs font-semibold mt-0.5 ${totalChange > 0 ? 'text-red-500' : totalChange < 0 ? 'text-green-500' : 'text-gray-400'}`}>
+            <p className={`text-xs font-semibold ${totalChange > 0 ? 'text-red-500' : totalChange < 0 ? 'text-green-500' : 'text-gray-400'}`}>
               {totalChange > 0 ? '+' : ''}{totalChange} {unit}
             </p>
           )}
@@ -159,14 +159,14 @@ export default function OverviewTab({ entries, goal, unit }: Props) {
 
         {/* Today */}
         <div className="flex flex-col items-center gap-0.5 px-1 border-x border-gray-100">
-          <p className="text-xs text-gray-400 mb-0.5">Today</p>
+          <p className="text-xs text-gray-400">Today</p>
+          <p className="text-xs text-gray-400">{formatShortDate(todayStr)}</p>
           <p className={`text-2xl font-bold leading-tight ${currentColor}`}>
             {latest ? toDisplay(latest.weight, unit) : '—'}
             {latest && <span className="text-sm font-medium ml-0.5 opacity-70">{unit}</span>}
           </p>
-          <p className="text-xs text-gray-400">{formatShortDate(todayStr)}</p>
           {todayTargetDisplay !== null && (
-            <p className="text-xs text-gray-400 mt-0.5">
+            <p className={`text-xs font-medium ${currentColor}`}>
               Target: {todayTargetDisplay} {unit}
             </p>
           )}
@@ -179,14 +179,14 @@ export default function OverviewTab({ entries, goal, unit }: Props) {
 
         {/* End Goal */}
         <div className="flex flex-col items-center gap-0.5 px-1">
-          <p className="text-xs text-gray-400 mb-0.5">End Goal</p>
+          <p className="text-xs text-gray-400">End Goal</p>
+          <p className="text-xs text-gray-400">{goalEnd ? formatShortDate(goalEnd) : '—'}</p>
           <p className="text-2xl font-bold text-gray-700 leading-tight">
             {goal ? toDisplay(goal.goalWeight, unit) : '—'}
             {goal && <span className="text-sm font-medium text-gray-500 ml-0.5">{unit}</span>}
           </p>
-          {goalEnd && <p className="text-xs text-gray-400">{formatShortDate(goalEnd)}</p>}
           {remainingToGoal !== null && (
-            <p className={`text-xs font-semibold mt-0.5 ${remainingToGoal <= 0 ? 'text-green-500' : 'text-gray-400'}`}>
+            <p className={`text-xs font-semibold ${remainingToGoal <= 0 ? 'text-green-500' : 'text-gray-400'}`}>
               {remainingToGoal <= 0
                 ? 'Reached!'
                 : `${Math.abs(remainingToGoal).toFixed(1)} ${unit} to go`}

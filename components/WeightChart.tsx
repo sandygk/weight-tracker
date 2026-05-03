@@ -54,13 +54,20 @@ function buildColorRuns(mainData: ChartPoint[], goal: Goal | null, unit: Unit): 
 
   const dateIdx = new Map(mainData.map((p, i) => [p.date, i]));
 
+  // Segment wPts[i]→wPts[i+1] is blue if it starts before the goal;
+  // otherwise it takes the color of its destination point.
+  function segmentColor(srcIdx: number): string {
+    if (goal && wPts[srcIdx].date < goal.startDate) return 'default';
+    return segColor(wPts[srcIdx + 1], goal, unit);
+  }
+
   type RawRun = { start: number; end: number; color: string };
   const rawRuns: RawRun[] = [];
   let runStart = 0;
-  let runColor = segColor(wPts[1], goal, unit);
+  let runColor = segmentColor(0);
 
   for (let i = 1; i < wPts.length - 1; i++) {
-    const next = segColor(wPts[i + 1], goal, unit);
+    const next = segmentColor(i);
     if (next !== runColor) {
       rawRuns.push({ start: runStart, end: i, color: runColor });
       runStart = i;
