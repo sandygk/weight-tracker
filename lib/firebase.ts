@@ -11,8 +11,9 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Only initialize in the browser — SSR prerendering must not touch Firebase.
-const app = typeof window !== 'undefined'
+// Only initialize in the browser with a valid config — gracefully skip if env vars aren't set.
+const hasConfig = !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+const app = typeof window !== 'undefined' && hasConfig
   ? (getApps().length ? getApp() : initializeApp(firebaseConfig))
   : null;
 
