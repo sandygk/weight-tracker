@@ -8,6 +8,7 @@ import { exportCSV } from '@/lib/storage';
 import { Theme, getTheme, saveTheme, applyTheme } from '@/lib/theme';
 import CSVImport from '@/components/CSVImport';
 import GoalSettings from '@/components/GoalSettings';
+import SegmentedControl from '@/components/SegmentedControl';
 import { Goal, WeightEntry } from '@/types';
 import { Sun, Moon, Monitor } from 'lucide-react';
 
@@ -72,30 +73,14 @@ export default function SettingsTab({ onUnitChange, installPrompt, onInstalled, 
           <CardTitle className="text-base">Units</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex rounded-xl overflow-hidden border border-gray-200 dark:border-gray-600 w-fit">
-            <button
-              type="button"
-              onClick={() => handleUnit('lb')}
-              className={`px-6 py-2 text-sm font-semibold transition-colors ${
-                unit === 'lb'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-white dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600'
-              }`}
-            >
-              lbs
-            </button>
-            <button
-              type="button"
-              onClick={() => handleUnit('kg')}
-              className={`px-6 py-2 text-sm font-semibold transition-colors border-l border-gray-200 dark:border-gray-600 ${
-                unit === 'kg'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-white dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600'
-              }`}
-            >
-              kg
-            </button>
-          </div>
+          <SegmentedControl
+            options={[
+              { id: 'lb' as Unit, label: 'lbs' },
+              { id: 'kg' as Unit, label: 'kg' },
+            ]}
+            value={unit}
+            onChange={handleUnit}
+          />
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
             All values are stored as lbs and converted for display.
           </p>
@@ -107,27 +92,15 @@ export default function SettingsTab({ onUnitChange, installPrompt, onInstalled, 
           <CardTitle className="text-base">Appearance</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex rounded-xl overflow-hidden border border-gray-200 dark:border-gray-600 w-fit">
-            {([
+          <SegmentedControl
+            options={[
               { id: 'light' as Theme, label: 'Light', Icon: Sun },
               { id: 'system' as Theme, label: 'System', Icon: Monitor },
               { id: 'dark' as Theme, label: 'Dark', Icon: Moon },
-            ]).map(({ id, label, Icon }, i) => (
-              <button
-                key={id}
-                type="button"
-                onClick={() => handleTheme(id)}
-                className={`flex items-center gap-1.5 px-4 py-2 text-sm font-semibold transition-colors ${i > 0 ? 'border-l border-gray-200 dark:border-gray-600' : ''} ${
-                  theme === id
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-white dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600'
-                }`}
-              >
-                <Icon size={14} />
-                {label}
-              </button>
-            ))}
-          </div>
+            ]}
+            value={theme}
+            onChange={handleTheme}
+          />
         </CardContent>
       </Card>
 

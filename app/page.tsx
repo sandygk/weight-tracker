@@ -81,7 +81,7 @@ export default function Home() {
       )}
 
       <div className="max-w-lg mx-auto">
-        {tab === 'chart' && <OverviewTab entries={entries} goal={goal} unit={unit} onChange={reload} />}
+        {tab === 'chart' && <OverviewTab entries={entries} goal={goal} unit={unit} />}
 
         {tab === 'history' && (
           <div className="px-4 py-4 space-y-4">

@@ -1,8 +1,35 @@
 import { Goal } from '@/types';
 
-export interface GoalPoint {
-  date: string;
-  goalWeight: number;
+export type ColorTier = 'green' | 'lime' | 'orange' | 'red' | 'default';
+
+export const TIER_CLASS: Record<ColorTier, string> = {
+  green: 'text-green-500',
+  lime:  'text-lime-500',
+  orange: 'text-orange-500',
+  red:   'text-red-500',
+  default: 'text-blue-600',
+};
+
+export const TIER_STROKE: Record<ColorTier, string> = {
+  green: '#22c55e',
+  lime:  '#84cc16',
+  orange: '#f97316',
+  red:   '#ef4444',
+  default: '#3b82f6',
+};
+
+export function goalColorTier(
+  actualDisplay: number,
+  expectedDisplay: number | null,
+  isGainGoal: boolean,
+): ColorTier {
+  if (expectedDisplay == null) return 'default';
+  const raw = actualDisplay - expectedDisplay;
+  const diff = isGainGoal ? -raw : raw;
+  if (diff <= -1) return 'green';
+  if (diff <= 0)  return 'lime';
+  if (diff <= 1)  return 'orange';
+  return 'red';
 }
 
 export function goalEndDate(goal: Goal): string | null {
@@ -28,25 +55,3 @@ export function expectedWeightOnDate(goal: Goal, date: string): number | null {
   return goal.startWeight - (goal.startWeight - goal.goalWeight) * fraction;
 }
 
-export function calculateGoalLine(goal: Goal): GoalPoint[] {
-  const endStr = goalEndDate(goal);
-  if (!endStr) return [];
-
-  const start = new Date(goal.startDate + 'T12:00:00');
-  const end = new Date(endStr + 'T12:00:00');
-  const totalMs = end.getTime() - start.getTime();
-  if (totalMs <= 0) return [];
-
-  const totalDays = Math.ceil(totalMs / 86400000);
-  const totalLoss = goal.startWeight - goal.goalWeight;
-  const points: GoalPoint[] = [];
-
-  for (let i = 0; i <= totalDays; i++) {
-    const d = new Date(start);
-    d.setDate(d.getDate() + i);
-    const gw = Math.round((goal.startWeight - (totalLoss * i) / totalDays) * 10) / 10;
-    points.push({ date: d.toISOString().split('T')[0], goalWeight: gw });
-  }
-
-  return points;
-}

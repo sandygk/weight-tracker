@@ -9,7 +9,7 @@ import {
 import { deleteEntry, upsertEntry } from '@/lib/storage';
 import { WeightEntry, Goal } from '@/types';
 import { Unit, toDisplay } from '@/lib/units';
-import { expectedWeightOnDate } from '@/lib/goalCalculator';
+import { expectedWeightOnDate, goalColorTier, TIER_CLASS } from '@/lib/goalCalculator';
 import { Trash2, NotebookPen } from 'lucide-react';
 
 interface Props {
@@ -20,15 +20,9 @@ interface Props {
 }
 
 function entryColor(entry: WeightEntry, goal: Goal | null, unit: Unit): string {
-  if (!goal || entry.date < goal.startDate) return 'text-blue-600';
+  if (!goal || entry.date < goal.startDate) return TIER_CLASS.default;
   const exp = expectedWeightOnDate(goal, entry.date);
-  if (exp == null) return 'text-blue-600';
-  const raw = toDisplay(entry.weight, unit) - toDisplay(exp, unit);
-  const diff = goal.goalWeight > goal.startWeight ? -raw : raw;
-  if (diff <= -1) return 'text-green-500';
-  if (diff <= 0) return 'text-lime-500';
-  if (diff <= 1) return 'text-orange-500';
-  return 'text-red-500';
+  return TIER_CLASS[goalColorTier(toDisplay(entry.weight, unit), exp != null ? toDisplay(exp, unit) : null, goal.goalWeight > goal.startWeight)];
 }
 
 function formatDate(dateStr: string): string {

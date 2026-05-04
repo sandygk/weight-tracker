@@ -4,7 +4,7 @@ import {
   ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
 import { WeightEntry, Goal } from '@/types';
-import { goalEndDate, expectedWeightOnDate } from '@/lib/goalCalculator';
+import { goalEndDate, expectedWeightOnDate, goalColorTier, TIER_CLASS, TIER_STROKE, ColorTier } from '@/lib/goalCalculator';
 import { Unit, toDisplay } from '@/lib/units';
 import { useIsDark } from '@/lib/theme';
 
@@ -22,32 +22,10 @@ interface ColorRun {
   stroke: string;
 }
 
-const STROKE: Record<string, string> = {
-  green: '#22c55e',
-  lime: '#84cc16',
-  orange: '#f97316',
-  red: '#ef4444',
-  default: '#3b82f6',
-};
-
-const TOOLTIP_CLASS: Record<string, string> = {
-  green: 'text-green-500',
-  lime: 'text-lime-500',
-  orange: 'text-orange-500',
-  red: 'text-red-500',
-  default: 'text-blue-600',
-};
-
-function segColor(p: ChartPoint, goal: Goal | null, unit: Unit): string {
+function segColor(p: ChartPoint, goal: Goal | null, unit: Unit): ColorTier {
   if (!goal || p.weight == null) return 'default';
   const exp = expectedWeightOnDate(goal, p.date);
-  if (exp == null) return 'default';
-  const raw = p.weight - toDisplay(exp, unit);
-  const diff = goal.goalWeight > goal.startWeight ? -raw : raw;
-  if (diff <= -1) return 'green';
-  if (diff <= 0) return 'lime';
-  if (diff <= 1) return 'orange';
-  return 'red';
+  return goalColorTier(p.weight, exp != null ? toDisplay(exp, unit) : null, goal.goalWeight > goal.startWeight);
 }
 
 function buildColorRuns(mainData: ChartPoint[], goal: Goal | null, unit: Unit): ColorRun[] {
@@ -58,12 +36,12 @@ function buildColorRuns(mainData: ChartPoint[], goal: Goal | null, unit: Unit): 
 
   // Segment wPts[i]→wPts[i+1] is blue if it starts before the goal;
   // otherwise it takes the color of its destination point.
-  function segmentColor(srcIdx: number): string {
+  function segmentColor(srcIdx: number): ColorTier {
     if (goal && wPts[srcIdx].date < goal.startDate) return 'default';
     return segColor(wPts[srcIdx + 1], goal, unit);
   }
 
-  type RawRun = { start: number; end: number; color: string };
+  type RawRun = { start: number; end: number; color: ColorTier };
   const rawRuns: RawRun[] = [];
   let runStart = 0;
   let runColor = segmentColor(0);
@@ -85,7 +63,7 @@ function buildColorRuns(mainData: ChartPoint[], goal: Goal | null, unit: Unit): 
       const idx = dateIdx.get(p.date);
       if (idx != null) data[idx] = { ts: p.ts, label: p.label, w: p.weight! };
     }
-    return { data, stroke: STROKE[color] ?? '#3b82f6' };
+    return { data, stroke: TIER_STROKE[color] };
   });
 }
 
@@ -168,15 +146,9 @@ export default function WeightChart({ entries, goal, unit, extendGoalLine = fals
   const yMax = Math.ceil(Math.max(...displayWeights) + 1);
 
   const getDotColor = (payload: any): string => {
-    if (!goal || !payload?.date || payload.weight == null) return '#3b82f6';
+    if (!goal || !payload?.date || payload.weight == null) return TIER_STROKE.default;
     const exp = expectedWeightOnDate(goal, payload.date);
-    if (exp == null) return '#3b82f6';
-    const raw = payload.weight - toDisplay(exp, unit);
-    const diff = goal.goalWeight > goal.startWeight ? -raw : raw;
-    if (diff <= -1) return '#22c55e';
-    if (diff <= 0) return '#84cc16';
-    if (diff <= 1) return '#f97316';
-    return '#ef4444';
+    return TIER_STROKE[goalColorTier(payload.weight, exp != null ? toDisplay(exp, unit) : null, goal.goalWeight > goal.startWeight)];
   };
 
   const CustomDot = (props: any) => {
@@ -208,7 +180,7 @@ export default function WeightChart({ entries, goal, unit, extendGoalLine = fals
     const colorKey = wp?.payload?.date && wp?.value != null
       ? segColor({ date: wp.payload.date, ts: wp.payload.ts ?? 0, label: dateLabel, weight: wp.value }, goal, unit)
       : 'default';
-    const weightClass = TOOLTIP_CLASS[colorKey] ?? 'text-blue-600';
+    const weightClass = TIER_CLASS[colorKey];
 
     const goalForDate = goal && wp?.payload?.date
       ? expectedWeightOnDate(goal, wp.payload.date)

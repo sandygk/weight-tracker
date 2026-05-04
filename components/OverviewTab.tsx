@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import WeightChart from './WeightChart';
 import { WeightEntry, Goal } from '@/types';
-import { goalEndDate, expectedWeightOnDate } from '@/lib/goalCalculator';
+import { goalEndDate, expectedWeightOnDate, goalColorTier, TIER_CLASS } from '@/lib/goalCalculator';
 import { Unit, toDisplay } from '@/lib/units';
 
 const RANGE_KEY = 'wt-range';
@@ -35,7 +35,6 @@ interface Props {
   entries: WeightEntry[];
   goal: Goal | null;
   unit: Unit;
-  onChange: () => void;
 }
 
 export default function OverviewTab({ entries, goal, unit }: Props) {
@@ -98,23 +97,14 @@ export default function OverviewTab({ entries, goal, unit }: Props) {
   const isGainGoal = !!(goal && goal.goalWeight > goal.startWeight);
 
   const currentColor = (() => {
-    if (!goal || !latest) return 'text-blue-600';
+    if (!goal || !latest) return TIER_CLASS.default;
     const exp = expectedWeightOnDate(goal, todayStr);
-    if (exp == null) return 'text-blue-600';
-    const raw = toDisplay(latest.weight, unit) - toDisplay(exp, unit);
-    const diff = isGainGoal ? -raw : raw;
-    if (diff <= -1) return 'text-green-500';
-    if (diff <= 0) return 'text-lime-500';
-    if (diff <= 1) return 'text-orange-500';
-    return 'text-red-500';
+    return TIER_CLASS[goalColorTier(toDisplay(latest.weight, unit), exp != null ? toDisplay(exp, unit) : null, isGainGoal)];
   })();
 
-  const orientedDelta = todayDelta === null ? null : (isGainGoal ? -todayDelta : todayDelta);
-  const deltaColor = orientedDelta === null ? 'text-gray-400'
-    : orientedDelta <= -1 ? 'text-green-500'
-    : orientedDelta <= 0 ? 'text-lime-500'
-    : orientedDelta <= 1 ? 'text-orange-500'
-    : 'text-red-500';
+  const deltaColor = (todayTarget != null && latest)
+    ? TIER_CLASS[goalColorTier(toDisplay(latest.weight, unit), toDisplay(todayTarget, unit), isGainGoal)]
+    : 'text-gray-400';
 
   if (entries.length === 0) {
     return (
