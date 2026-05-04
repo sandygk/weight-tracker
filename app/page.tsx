@@ -7,7 +7,7 @@ import OverviewTab from '@/components/OverviewTab';
 import WeightHistory from '@/components/WeightHistory';
 import SettingsTab from '@/components/SettingsTab';
 import LogModal from '@/components/LogModal';
-import { subscribeEntries, subscribeGoal, getEntriesOnce } from '@/lib/db';
+import { subscribeEntries, subscribeGoal, getEntriesOnce, migrateToDateIds } from '@/lib/db';
 import { onAuthChange, signOut, User } from '@/lib/firebaseAuth';
 import { getEntries, getGoal, getLocalData, replaceAll } from '@/lib/storage';
 import { importEntries, saveGoal } from '@/lib/data';
@@ -74,6 +74,7 @@ export default function Home() {
             // Only push goal on first sign-in (no Firestore entries yet)
             if (local.goal && existing.length === 0) await saveGoal(u.uid, local.goal);
           }
+          await migrateToDateIds(u.uid);
         }
         setUser(u);
         setAuthResolved(true);

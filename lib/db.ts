@@ -6,10 +6,6 @@ import { db } from './firebase';
 import { dlog } from './debugLog';
 import { WeightEntry, Goal } from '@/types';
 
-function generateId(): string {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2);
-}
-
 const entriesCol = (uid: string) => collection(db, 'users', uid, 'entries');
 const goalDocRef = (uid: string) => doc(db, 'users', uid, 'data', 'goal');
 
@@ -36,7 +32,8 @@ export function subscribeGoal(uid: string, cb: (goal: Goal | null) => void): Uns
 }
 
 export async function upsertEntry(uid: string, entry: Omit<WeightEntry, 'id'> & { id?: string }): Promise<string> {
-  const id = entry.id ?? generateId();
+  // Use date as document ID — guarantees one doc per date across all devices.
+  const id = entry.date;
   const data: Record<string, unknown> = { date: entry.date, weight: entry.weight };
   if (entry.note) data.note = entry.note;
   await setDoc(doc(entriesCol(uid), id), data);
@@ -65,7 +62,34 @@ export async function importEntries(uid: string, entries: WeightEntry[]): Promis
   for (const entry of entries) {
     const data: Record<string, unknown> = { date: entry.date, weight: entry.weight };
     if (entry.note) data.note = entry.note;
-    batch.set(doc(entriesCol(uid), entry.id), data);
+    // Use date as document ID for consistency with upsertEntry.
+    batch.set(doc(entriesCol(uid), entry.date), data);
   }
   await batch.commit();
+}
+
+// One-time migration: converts random-ID docs to date-ID docs.
+// Safe to call on every sign-in — no-ops once already migrated.
+export async function migrateToDateIds(uid: string): Promise<void> {
+  const snap = await getDocs(entriesCol(uid));
+  const isDateId = (id: string) => /^\d{4}-\d{2}-\d{2}$/.test(id);
+
+  const dateIdSet = new Set(snap.docs.filter(d => isDateId(d.id)).map(d => d.id));
+  const toMigrate = snap.docs.filter(d => !isDateId(d.id));
+  if (toMigrate.length === 0) return;
+
+  dlog(`migrateToDateIds migrating ${toMigrate.length} docs`);
+  const batch = writeBatch(db);
+  for (const d of toMigrate) {
+    const data = d.data() as WeightEntry;
+    if (!dateIdSet.has(data.date)) {
+      const entryData: Record<string, unknown> = { date: data.date, weight: data.weight };
+      if (data.note) entryData.note = data.note;
+      batch.set(doc(entriesCol(uid), data.date), entryData);
+      dateIdSet.add(data.date);
+    }
+    batch.delete(doc(entriesCol(uid), d.id));
+  }
+  await batch.commit();
+  dlog(`migrateToDateIds done`);
 }
