@@ -7,7 +7,11 @@ import OverviewTab from '@/components/OverviewTab';
 import WeightHistory from '@/components/WeightHistory';
 import SettingsTab from '@/components/SettingsTab';
 import LogModal from '@/components/LogModal';
-import { getEntries, getGoal } from '@/lib/storage';
+import SignInScreen from '@/components/SignInScreen';
+import MigratePrompt from '@/components/MigratePrompt';
+import { subscribeEntries, subscribeGoal } from '@/lib/db';
+import { onAuthChange, signOut, User } from '@/lib/firebaseAuth';
+import { getLocalData } from '@/lib/storage';
 import { getUnit, Unit } from '@/lib/units';
 import { getTheme, applyTheme } from '@/lib/theme';
 import { WeightEntry, Goal } from '@/types';
@@ -26,6 +30,10 @@ function getTabFromHash(): Tab {
 }
 
 export default function Home() {
+  const [user, setUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [migrateEntries, setMigrateEntries] = useState<WeightEntry[] | null>(null);
+
   const [tab, setTab] = useState<Tab>(() => getTabFromHash());
   const [entries, setEntries] = useState<WeightEntry[]>([]);
   const [goal, setGoal] = useState<Goal | null>(null);
@@ -33,10 +41,29 @@ export default function Home() {
   const [showLog, setShowLog] = useState(false);
   const [installPrompt, setInstallPrompt] = useState<any>(null);
 
-  const reload = useCallback(() => {
-    setEntries(getEntries());
-    setGoal(getGoal());
+  // Auth state
+  useEffect(() => {
+    return onAuthChange(u => {
+      setUser(u);
+      setAuthLoading(false);
+      if (u) {
+        const local = getLocalData();
+        if (local.entries.length > 0) setMigrateEntries(local.entries);
+      }
+    });
   }, []);
+
+  // Firestore subscriptions — active only while signed in
+  useEffect(() => {
+    if (!user) {
+      setEntries([]);
+      setGoal(null);
+      return;
+    }
+    const unsubEntries = subscribeEntries(user.uid, setEntries);
+    const unsubGoal = subscribeGoal(user.uid, setGoal);
+    return () => { unsubEntries(); unsubGoal(); };
+  }, [user]);
 
   const handleTabChange = useCallback((t: Tab) => {
     setTab(t);
@@ -49,8 +76,6 @@ export default function Home() {
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
-  useEffect(() => { reload(); }, [reload]);
-
   useEffect(() => {
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
     const handler = () => { if (getTheme() === 'system') applyTheme('system'); };
@@ -60,15 +85,32 @@ export default function Home() {
 
   useEffect(() => {
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
-    // Pick up the event if it fired before React mounted
     if ((window as any).__pwaPrompt) setInstallPrompt((window as any).__pwaPrompt);
     const handler = (e: Event) => { e.preventDefault(); setInstallPrompt(e); };
     window.addEventListener('beforeinstallprompt', handler);
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) return <SignInScreen />;
+
   return (
     <main className="bg-gray-50 dark:bg-gray-950 pb-20">
+      {migrateEntries && (
+        <MigratePrompt
+          uid={user.uid}
+          entries={migrateEntries}
+          onDone={() => setMigrateEntries(null)}
+        />
+      )}
+
       {tab !== 'chart' && (
         <header className="px-5 pt-5 pb-1">
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">
@@ -85,34 +127,38 @@ export default function Home() {
 
         {tab === 'history' && (
           <div className="px-4 py-4 space-y-4">
-            <WeightHistory entries={entries} unit={unit} goal={goal} onChange={reload} />
+            <WeightHistory uid={user.uid} entries={entries} unit={unit} goal={goal} onChange={() => {}} />
           </div>
         )}
 
         {tab === 'settings' && (
           <SettingsTab
+            uid={user.uid}
+            user={user}
+            onSignOut={signOut}
             onUnitChange={setUnit}
             installPrompt={installPrompt}
             onInstalled={() => setInstallPrompt(null)}
-            onImport={reload}
+            onImport={() => {}}
             goal={goal}
             entries={entries}
           />
         )}
       </div>
 
-      {/* FAB */}
-      {tab === 'chart' && <button
-        type="button"
-        onClick={() => setShowLog(true)}
-        style={{ touchAction: 'manipulation', bottom: '80px' }}
-        className="fixed left-1/2 -translate-x-1/2 z-40 w-14 h-14 bg-blue-500 rounded-full shadow-lg flex items-center justify-center active:bg-blue-700 transition-colors"
-      >
-        <Plus size={24} color="white" strokeWidth={2.5} />
-      </button>}
+      {tab === 'chart' && (
+        <button
+          type="button"
+          onClick={() => setShowLog(true)}
+          style={{ touchAction: 'manipulation', bottom: '80px' }}
+          className="fixed left-1/2 -translate-x-1/2 z-40 w-14 h-14 bg-blue-500 rounded-full shadow-lg flex items-center justify-center active:bg-blue-700 transition-colors"
+        >
+          <Plus size={24} color="white" strokeWidth={2.5} />
+        </button>
+      )}
 
       {showLog && (
-        <LogModal entries={entries} unit={unit} onSave={reload} onClose={() => setShowLog(false)} />
+        <LogModal uid={user.uid} entries={entries} unit={unit} onSave={() => {}} onClose={() => setShowLog(false)} />
       )}
 
       <BottomNav active={tab} onChange={handleTabChange} />

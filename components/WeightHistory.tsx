@@ -6,13 +6,14 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
   DialogFooter, DialogClose,
 } from '@/components/ui/dialog';
-import { deleteEntry, upsertEntry } from '@/lib/storage';
+import { deleteEntry, upsertEntry } from '@/lib/db';
 import { WeightEntry, Goal } from '@/types';
 import { Unit, toDisplay } from '@/lib/units';
 import { expectedWeightOnDate, goalColorTier, TIER_CLASS } from '@/lib/goalCalculator';
 import { Trash2, NotebookPen } from 'lucide-react';
 
 interface Props {
+  uid: string;
   entries: WeightEntry[];
   unit: Unit;
   goal: Goal | null;
@@ -32,16 +33,16 @@ function formatDate(dateStr: string): string {
   });
 }
 
-export default function WeightHistory({ entries, unit, goal, onChange }: Props) {
+export default function WeightHistory({ uid, entries, unit, goal, onChange }: Props) {
   const isGainGoal = !!(goal && goal.goalWeight > goal.startWeight);
   const sorted = [...entries].sort((a, b) => b.date.localeCompare(a.date));
   const [pendingDelete, setPendingDelete] = useState<WeightEntry | null>(null);
   const [editingNote, setEditingNote] = useState<WeightEntry | null>(null);
   const [noteText, setNoteText] = useState('');
 
-  function confirmDelete() {
+  async function confirmDelete() {
     if (!pendingDelete) return;
-    deleteEntry(pendingDelete.id);
+    await deleteEntry(uid, pendingDelete.id);
     setPendingDelete(null);
     onChange();
   }
@@ -51,9 +52,9 @@ export default function WeightHistory({ entries, unit, goal, onChange }: Props) 
     setNoteText(entry.note ?? '');
   }
 
-  function saveNote() {
+  async function saveNote() {
     if (!editingNote) return;
-    upsertEntry({ date: editingNote.date, weight: editingNote.weight, note: noteText.trim() || undefined });
+    await upsertEntry(uid, { id: editingNote.id, date: editingNote.date, weight: editingNote.weight, note: noteText.trim() || undefined });
     setEditingNote(null);
     onChange();
   }

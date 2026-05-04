@@ -65,8 +65,11 @@ export function clearGoal() {
   save(store);
 }
 
-export function exportCSV(unit: Unit): string {
-  const entries = getEntries();
+export function getLocalData(): { entries: WeightEntry[]; goal: Goal | null } {
+  return load();
+}
+
+export function exportCSV(entries: WeightEntry[], unit: Unit): string {
   const rows = ['Weight Date,Weight Measurement,Weight Unit,Note'];
   for (const e of entries) {
     const weight = toDisplay(e.weight, unit);

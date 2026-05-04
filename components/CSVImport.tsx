@@ -3,14 +3,15 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { parseWeightFitCSV } from '@/lib/csvParser';
-import { upsertEntry } from '@/lib/storage';
+import { importEntries } from '@/lib/db';
 import { Upload } from 'lucide-react';
 
 interface Props {
+  uid: string;
   onImport: () => void;
 }
 
-export default function CSVImport({ onImport }: Props) {
+export default function CSVImport({ uid, onImport }: Props) {
   const [status, setStatus] = useState<string | null>(null);
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -20,16 +21,17 @@ export default function CSVImport({ onImport }: Props) {
 
     setStatus('Reading file…');
     const reader = new FileReader();
-    reader.onload = ev => {
+    reader.onload = async ev => {
       try {
         const text = ev.target?.result as string;
-        const entries = parseWeightFitCSV(text);
-        if (entries.length === 0) {
+        const parsed = parseWeightFitCSV(text);
+        if (parsed.length === 0) {
           setStatus('No valid entries found. Is this a WeightFit CSV?');
           return;
         }
-        entries.forEach(({ date, weight }) => upsertEntry({ date, weight }));
-        setStatus(`✓ Imported ${entries.length} entries.`);
+        const id = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
+        await importEntries(uid, parsed.map(e => ({ ...e, id: id() })));
+        setStatus(`✓ Imported ${parsed.length} entries.`);
         onImport();
       } catch (err) {
         setStatus('Error parsing file. Please try again.');

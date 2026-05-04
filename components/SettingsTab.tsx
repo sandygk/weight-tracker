@@ -10,9 +10,13 @@ import CSVImport from '@/components/CSVImport';
 import GoalSettings from '@/components/GoalSettings';
 import SegmentedControl from '@/components/SegmentedControl';
 import { Goal, WeightEntry } from '@/types';
-import { Sun, Moon, Monitor } from 'lucide-react';
+import { Sun, Moon, Monitor, LogOut } from 'lucide-react';
+import { User } from '@/lib/firebaseAuth';
 
 interface Props {
+  uid: string;
+  user: User;
+  onSignOut: () => void;
   onUnitChange: (unit: Unit) => void;
   installPrompt: any;
   onInstalled: () => void;
@@ -21,7 +25,7 @@ interface Props {
   entries: WeightEntry[];
 }
 
-export default function SettingsTab({ onUnitChange, installPrompt, onInstalled, onImport, goal, entries }: Props) {
+export default function SettingsTab({ uid, user, onSignOut, onUnitChange, installPrompt, onInstalled, onImport, goal, entries }: Props) {
   const [unit, setUnit] = useState<Unit>(() => getUnit());
   const [theme, setTheme] = useState<Theme>(() => getTheme());
   const [installed, setInstalled] = useState(
@@ -44,7 +48,7 @@ export default function SettingsTab({ onUnitChange, installPrompt, onInstalled, 
   }
 
   function handleExport() {
-    const csv = exportCSV(unit);
+    const csv = exportCSV(entries, unit);
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -66,7 +70,20 @@ export default function SettingsTab({ onUnitChange, installPrompt, onInstalled, 
 
   return (
     <div className="px-4 py-4 space-y-4">
-      <GoalSettings key={unit} goal={goal} entries={entries} unit={unit} onSave={onImport} />
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Account</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-gray-600 dark:text-gray-300 truncate">{user.email ?? user.displayName ?? 'Signed in'}</p>
+          <Button variant="outline" onClick={onSignOut} className="w-full flex items-center gap-2">
+            <LogOut size={14} />
+            Sign Out
+          </Button>
+        </CardContent>
+      </Card>
+
+      <GoalSettings key={unit} uid={uid} goal={goal} entries={entries} unit={unit} onSave={onImport} />
 
       <Card>
         <CardHeader>
@@ -104,7 +121,7 @@ export default function SettingsTab({ onUnitChange, installPrompt, onInstalled, 
         </CardContent>
       </Card>
 
-      <CSVImport onImport={onImport} />
+      <CSVImport uid={uid} onImport={onImport} />
 
       <Card>
         <CardHeader>

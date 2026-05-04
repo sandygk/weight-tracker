@@ -4,13 +4,14 @@ import { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { saveGoal, clearGoal } from '@/lib/storage';
+import { saveGoal, clearGoal } from '@/lib/db';
 import { goalEndDate } from '@/lib/goalCalculator';
 import { Goal, WeightEntry } from '@/types';
 import { Unit, toDisplay, toStorage } from '@/lib/units';
 import { Target, Trash2 } from 'lucide-react';
 
 interface Props {
+  uid: string;
   goal: Goal | null;
   entries: WeightEntry[];
   unit: Unit;
@@ -29,7 +30,7 @@ function closestEntry(entries: WeightEntry[], date: string): WeightEntry | null 
   });
 }
 
-export default function GoalSettings({ goal, entries, unit, onSave }: Props) {
+export default function GoalSettings({ uid, goal, entries, unit, onSave }: Props) {
   const sorted = [...entries].sort((a, b) => a.date.localeCompare(b.date));
   const latest = sorted.length > 0 ? sorted[sorted.length - 1] : null;
 
@@ -60,8 +61,8 @@ export default function GoalSettings({ goal, entries, unit, onSave }: Props) {
     const gw = parseFloat(goalWeight);
     const wl = parseFloat(weeklyLoss);
     if (isNaN(sw) || isNaN(gw) || isNaN(wl) || wl <= 0 || sw === gw) return;
-    const t = setTimeout(() => {
-      saveGoal({
+    const t = setTimeout(async () => {
+      await saveGoal(uid, {
         startDate,
         startWeight: toStorage(sw, unit),
         goalWeight: toStorage(gw, unit),
@@ -87,8 +88,8 @@ export default function GoalSettings({ goal, entries, unit, onSave }: Props) {
     ? Math.ceil(Math.abs(sw - gw) / wl)
     : null;
 
-  function handleClear() {
-    clearGoal();
+  async function handleClear() {
+    await clearGoal(uid);
     onSave();
   }
 

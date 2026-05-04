@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { upsertEntry } from '@/lib/storage';
+import { upsertEntry } from '@/lib/db';
 import { WeightEntry } from '@/types';
 import { Unit, toDisplay, toStorage } from '@/lib/units';
 
 interface Props {
+  uid: string;
   entries: WeightEntry[];
   unit: Unit;
   onSave: () => void;
@@ -146,7 +147,7 @@ function DrumCol({ value, min, max, wrap = false, onChange }: DrumColProps) {
   );
 }
 
-export default function LogModal({ entries, unit, onSave, onClose }: Props) {
+export default function LogModal({ uid, entries, unit, onSave, onClose }: Props) {
   const todayStr = today();
   const sorted = [...entries].sort((a, b) => a.date.localeCompare(b.date));
   const lastWeightLb = sorted.length > 0 ? sorted[sorted.length - 1].weight : 150.0;
@@ -160,10 +161,10 @@ export default function LogModal({ entries, unit, onSave, onClose }: Props) {
   const wholeMin = unit === 'kg' ? 20 : 50;
   const wholeMax = unit === 'kg' ? 350 : 700;
 
-  function handleOk() {
+  async function handleOk() {
     const displayWeight = Math.round((whole + decimal / 10) * 10) / 10;
     const weight = toStorage(displayWeight, unit);
-    upsertEntry({ date: todayStr, weight, note: note.trim() || undefined });
+    await upsertEntry(uid, { date: todayStr, weight, note: note.trim() || undefined });
     onSave();
     onClose();
   }
