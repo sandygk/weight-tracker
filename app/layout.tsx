@@ -18,11 +18,7 @@ export const metadata: Metadata = {
     title: "Weight Tracker",
   },
   icons: {
-    icon: [
-      { url: '/icon.svg', type: 'image/svg+xml' },
-      { url: '/favicon.ico', type: 'image/x-icon' },
-    ],
-    apple: '/icon-192.png',
+    apple: "/icon-192.png",
   },
 };
 
