@@ -30,6 +30,7 @@ export async function signOut(): Promise<void> {
 }
 
 export function onAuthChange(cb: (user: User | null) => void): () => void {
+  if (!auth) { cb(null); return () => {}; }
   return onAuthStateChanged(auth, cb);
 }
 
