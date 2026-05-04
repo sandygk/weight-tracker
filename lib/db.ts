@@ -3,6 +3,7 @@ import {
   writeBatch, getDocs, Unsubscribe,
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { dlog } from './debugLog';
 import { WeightEntry, Goal } from '@/types';
 
 function generateId(): string {
@@ -15,16 +16,22 @@ const goalDocRef = (uid: string) => doc(db, 'users', uid, 'data', 'goal');
 export function subscribeEntries(uid: string, cb: (entries: WeightEntry[]) => void): Unsubscribe {
   return onSnapshot(
     entriesCol(uid),
-    snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() } as WeightEntry)).sort((a, b) => a.date.localeCompare(b.date))),
-    () => {},
+    snap => {
+      dlog(`subscribeEntries count=${snap.docs.length} pending=${snap.metadata.hasPendingWrites} fromCache=${snap.metadata.fromCache}`);
+      cb(snap.docs.map(d => ({ id: d.id, ...d.data() } as WeightEntry)).sort((a, b) => a.date.localeCompare(b.date)));
+    },
+    e => dlog(`subscribeEntries ERROR: ${e}`),
   );
 }
 
 export function subscribeGoal(uid: string, cb: (goal: Goal | null) => void): Unsubscribe {
   return onSnapshot(
     goalDocRef(uid),
-    snap => cb(snap.exists() ? (snap.data() as Goal) : null),
-    () => {},
+    snap => {
+      dlog(`subscribeGoal exists=${snap.exists()} pending=${snap.metadata.hasPendingWrites} fromCache=${snap.metadata.fromCache}`);
+      cb(snap.exists() ? (snap.data() as Goal) : null);
+    },
+    e => dlog(`subscribeGoal ERROR: ${e}`),
   );
 }
 
