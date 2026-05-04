@@ -208,14 +208,7 @@ export default function SettingsTab({ uid, user, syncStatus, onSignOut, onUnitCh
             <Button
               variant="outline"
               className="flex-1"
-              onClick={() => setLogs(getLogs())}
-            >
-              Refresh
-            </Button>
-            <Button
-              variant="outline"
-              className="flex-1"
-              onClick={() => navigator.clipboard.writeText(logs.join('\n'))}
+              onClick={() => navigator.clipboard.writeText(getLogs().join('\n'))}
               disabled={logs.length === 0}
             >
               Copy
