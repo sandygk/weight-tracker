@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { initializeFirestore, persistentLocalCache, getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -19,5 +19,12 @@ const app = typeof window !== 'undefined' && hasConfig
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const auth = app ? getAuth(app) : (null as any);
+
+// Use persistent local cache so writes are immediately visible via onSnapshot
+// even before the network round-trip completes.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const db = app ? getFirestore(app) : (null as any);
+export const db = app
+  ? (getApps().length > 1
+      ? getFirestore(app)
+      : initializeFirestore(app, { localCache: persistentLocalCache() }))
+  : (null as any);
