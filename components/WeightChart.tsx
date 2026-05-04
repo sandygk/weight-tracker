@@ -193,20 +193,24 @@ export default function WeightChart({ entries, goal, unit, extendGoalLine = fals
     const prevDeltaColor = !goal || prevDelta === null || prevDelta === 0
       ? 'text-gray-400 dark:text-gray-500'
       : (prevDelta < 0) === !isGainGoal ? 'text-green-500' : 'text-red-400';
+    const prevWeightColor = (pt.prevDate && pt.prevWeight != null)
+      ? TIER_CLASS[segColor({ date: pt.prevDate, ts: 0, label: '', weight: pt.prevWeight }, goal, unit)]
+      : 'text-gray-400 dark:text-gray-500';
 
     return (
       <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl px-3 py-2 shadow-md text-xs max-w-52">
         <p className="text-gray-500 dark:text-gray-400 mb-0.5">{dateLabel}</p>
         <p className={`text-sm font-bold ${weightClass}`}>{wp.value} {unit}</p>
         {prevDelta !== null && prevDateLabel && (
-          <p className={prevDeltaColor}>
-            {prevDelta > 0 ? '+' : ''}{prevDelta} {unit} vs {prevDateLabel} ({pt.prevWeight} {unit})
+          <p className="text-gray-400 dark:text-gray-500">
+            <span className={prevDeltaColor}>{prevDelta > 0 ? '+' : ''}{prevDelta} {unit}</span>
+            {' '}vs {prevDateLabel} (<span className={prevWeightColor}>{pt.prevWeight} {unit}</span>)
           </p>
         )}
         {goalDisplay != null && vsTarget !== null && (
-          <p className={`mt-1 ${weightClass}`}>
-            {vsTarget > 0 ? '+' : ''}{vsTarget} {unit} vs target
-            <span className="text-gray-400 dark:text-gray-500 ml-1">({goalDisplay})</span>
+          <p className="mt-1 text-gray-400 dark:text-gray-500">
+            <span className={weightClass}>{vsTarget > 0 ? '+' : ''}{vsTarget} {unit}</span>
+            {' '}vs target (<span className="text-purple-500">{goalDisplay}</span>)
           </p>
         )}
         {pt.note && <p className="text-gray-400 dark:text-gray-500 mt-1 italic">{pt.note}</p>}
