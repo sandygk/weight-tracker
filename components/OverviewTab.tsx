@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import WeightChart from './WeightChart';
 import { WeightEntry, Goal } from '@/types';
 import { goalEndDate, expectedWeightOnDate, goalColorTier, TIER_CLASS } from '@/lib/goalCalculator';
@@ -38,8 +38,7 @@ interface Props {
 }
 
 export default function OverviewTab({ entries, goal, unit }: Props) {
-  const [range, setRange] = useState<RangeLabel>('3M');
-  useEffect(() => { setRange(loadRange()); }, []);
+  const [range, setRange] = useState<RangeLabel>(() => loadRange());
 
   const sorted = useMemo(
     () => [...entries].sort((a, b) => a.date.localeCompare(b.date)),
