@@ -200,17 +200,13 @@ export default function WeightChart({ entries, goal, unit, extendGoalLine = fals
         <p className={`text-sm font-bold ${weightClass}`}>{wp.value} {unit}</p>
         {prevDelta !== null && prevDateLabel && (
           <p className={prevDeltaColor}>
-            {prevDelta > 0 ? '+' : ''}{prevDelta} {unit} from {prevDateLabel}
+            {prevDelta > 0 ? '+' : ''}{prevDelta} {unit} vs {prevDateLabel} ({pt.prevWeight} {unit})
           </p>
         )}
-        {goalDisplay != null && (
-          <p className="text-purple-500 mt-1">
-            Target {goalDisplay} {unit}
-            {vsTarget !== null && (
-              <span className={`ml-1 ${weightClass}`}>
-                ({vsTarget > 0 ? '+' : ''}{vsTarget} {vsTarget > 0 ? 'above' : 'below'})
-              </span>
-            )}
+        {goalDisplay != null && vsTarget !== null && (
+          <p className={`mt-1 ${weightClass}`}>
+            {vsTarget > 0 ? '+' : ''}{vsTarget} {unit} vs target
+            <span className="text-gray-400 dark:text-gray-500 ml-1">({goalDisplay})</span>
           </p>
         )}
         {pt.note && <p className="text-gray-400 dark:text-gray-500 mt-1 italic">{pt.note}</p>}
