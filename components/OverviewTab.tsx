@@ -35,11 +35,35 @@ interface Props {
   entries: WeightEntry[];
   goal: Goal | null;
   unit: Unit;
+  loading?: boolean;
 }
 
-export default function OverviewTab({ entries, goal, unit }: Props) {
+function OverviewSkeleton() {
+  return (
+    <div className="flex flex-col pt-4 pb-2 animate-pulse">
+      <div className="flex items-center justify-between px-5 mb-4">
+        <div className="h-7 w-24 bg-gray-200 dark:bg-gray-800 rounded-lg" />
+        <div className="h-7 w-16 bg-gray-200 dark:bg-gray-800 rounded-full" />
+      </div>
+      <div className="grid grid-cols-3 text-center px-2 pb-4 gap-2">
+        {[0, 1, 2].map(i => (
+          <div key={i} className="flex flex-col items-center gap-2">
+            <div className="h-3 w-16 bg-gray-200 dark:bg-gray-800 rounded" />
+            <div className="h-8 w-20 bg-gray-200 dark:bg-gray-800 rounded-lg" />
+            <div className="h-3 w-12 bg-gray-200 dark:bg-gray-800 rounded" />
+          </div>
+        ))}
+      </div>
+      <div className="mx-1 h-64 bg-gray-200 dark:bg-gray-800 rounded-xl" />
+    </div>
+  );
+}
+
+export default function OverviewTab({ entries, goal, unit, loading = false }: Props) {
   const [range, setRange] = useState<RangeLabel>('3M');
   useEffect(() => { setRange(loadRange()); }, []);
+
+  if (loading) return <OverviewSkeleton />;
 
   const sorted = useMemo(
     () => [...entries].sort((a, b) => a.date.localeCompare(b.date)),
