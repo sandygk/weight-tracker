@@ -73,11 +73,11 @@ export default function OverviewTab({ entries, goal, unit }: Props) {
   }, [sorted, activeRange, goal]);
 
   const latest = sorted.length > 0 ? sorted[sorted.length - 1] : null;
-  const overallFirst = sorted.length > 0 ? sorted[0] : null;
+  const rangeFirst = rangeEntries.length > 0 ? rangeEntries[0] : null;
 
-  // Total change from very first entry to latest
-  const totalChange = (latest && overallFirst && latest.id !== overallFirst.id)
-    ? Math.round((toDisplay(latest.weight, unit) - toDisplay(overallFirst.weight, unit)) * 10) / 10
+  // Total change from first entry in selected range to latest overall
+  const totalChange = (latest && rangeFirst && latest.id !== rangeFirst.id)
+    ? Math.round((toDisplay(latest.weight, unit) - toDisplay(rangeFirst.weight, unit)) * 10) / 10
     : null;
 
   // Today's goal target and delta
@@ -138,10 +138,10 @@ export default function OverviewTab({ entries, goal, unit }: Props) {
       <div className="grid grid-cols-3 text-center px-2 pb-4">
         {/* Start */}
         <div className="flex flex-col items-center gap-0.5 px-1">
-          <p className="text-xs text-gray-400 dark:text-gray-500">Start · {overallFirst ? formatShortDate(overallFirst.date) : '—'}</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">Start · {rangeFirst ? formatShortDate(rangeFirst.date) : '—'}</p>
           <p className="text-2xl font-bold text-gray-700 dark:text-gray-200 leading-tight">
-            {overallFirst ? toDisplay(overallFirst.weight, unit) : '—'}
-            {overallFirst && <span className="text-sm font-medium text-gray-500 dark:text-gray-400 ml-0.5">{unit}</span>}
+            {rangeFirst ? toDisplay(rangeFirst.weight, unit) : '—'}
+            {rangeFirst && <span className="text-sm font-medium text-gray-500 dark:text-gray-400 ml-0.5">{unit}</span>}
           </p>
           {totalChange !== null && (
             <>

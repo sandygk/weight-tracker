@@ -15,6 +15,8 @@ interface ChartPoint {
   weight?: number;
   goalWeight?: number;
   note?: string;
+  prevWeight?: number;
+  prevDate?: string;
 }
 
 interface ColorRun {
@@ -89,13 +91,17 @@ function buildData(entries: WeightEntry[], goal: Goal | null, extendGoalLine: bo
 
   const ts = (d: string) => new Date(d + 'T12:00:00').getTime();
 
-  for (const e of sorted) {
+  for (let i = 0; i < sorted.length; i++) {
+    const e = sorted[i];
     const exp = goal ? expectedWeightOnDate(goal, e.date) : null;
+    const prev = i > 0 ? sorted[i - 1] : null;
     map.set(e.date, {
       date: e.date, ts: ts(e.date), label: fmt(e.date),
       weight: toDisplay(e.weight, unit),
       goalWeight: exp != null ? toDisplay(exp, unit) : undefined,
       note: e.note,
+      prevWeight: prev ? toDisplay(prev.weight, unit) : undefined,
+      prevDate: prev ? prev.date : undefined,
     });
   }
 
@@ -168,43 +174,46 @@ export default function WeightChart({ entries, goal, unit, extendGoalLine = fals
     return <circle cx={cx} cy={cy} r={6} fill={getDotColor(payload)} stroke={isDark ? '#030712' : 'white'} strokeWidth={2} />;
   };
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload }: any) => {
     if (!active || !payload?.length) return null;
     const wp = payload.find((p: any) => p.dataKey === 'weight');
-    const gp = payload.find((p: any) => p.dataKey === 'goalWeight');
-    const anyPayload = payload[0]?.payload;
-    const dateLabel = wp?.payload?.date
-      ? new Date(wp.payload.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-      : (anyPayload?.label ?? fmt(new Date(label).toISOString().split('T')[0]));
+    if (!wp?.payload?.date || wp.value == null) return null;
 
-    const colorKey = wp?.payload?.date && wp?.value != null
-      ? segColor({ date: wp.payload.date, ts: wp.payload.ts ?? 0, label: dateLabel, weight: wp.value }, goal, unit)
-      : 'default';
-    const weightClass = TIER_CLASS[colorKey];
+    const pt = wp.payload;
+    const dateLabel = new Date(pt.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const weightClass = TIER_CLASS[segColor({ date: pt.date, ts: pt.ts ?? 0, label: dateLabel, weight: wp.value }, goal, unit)];
 
-    const goalForDate = goal && wp?.payload?.date
-      ? expectedWeightOnDate(goal, wp.payload.date)
-      : null;
-    const goalForDateDisplay = goalForDate != null
-      ? Math.round(toDisplay(goalForDate, unit) * 10) / 10
-      : null;
-    const delta = goalForDateDisplay != null && wp?.value != null
-      ? Math.round((Number(wp.value) - goalForDateDisplay) * 10) / 10
-      : null;
+    const goalForDate = goal ? expectedWeightOnDate(goal, pt.date) : null;
+    const goalDisplay = goalForDate != null ? Math.round(toDisplay(goalForDate, unit) * 10) / 10 : null;
+    const vsTarget = goalDisplay != null ? Math.round((Number(wp.value) - goalDisplay) * 10) / 10 : null;
+
+    const isGainGoal = !!(goal && goal.goalWeight > goal.startWeight);
+    const prevDelta = pt.prevWeight != null ? Math.round((Number(wp.value) - pt.prevWeight) * 10) / 10 : null;
+    const prevDateLabel = pt.prevDate ? new Date(pt.prevDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : null;
+    const prevDeltaColor = !goal || prevDelta === null || prevDelta === 0
+      ? 'text-gray-400 dark:text-gray-500'
+      : (prevDelta < 0) === !isGainGoal ? 'text-green-500' : 'text-red-400';
 
     return (
-      <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl px-3 py-2 shadow-md text-xs max-w-48">
-        <p className="font-semibold text-gray-600 dark:text-gray-300 mb-1">{dateLabel}</p>
-        {wp && <p className={weightClass}>Weight: <strong>{wp.value} {unit}</strong></p>}
-        {goalForDateDisplay != null && (
-          <p className="text-purple-500">Target: <strong>{goalForDateDisplay} {unit}</strong></p>
-        )}
-        {delta !== null && (
-          <p className={weightClass}>
-            {delta > 0 ? '+' : ''}{delta} {unit}
+      <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl px-3 py-2 shadow-md text-xs max-w-52">
+        <p className="text-gray-500 dark:text-gray-400 mb-0.5">{dateLabel}</p>
+        <p className={`text-sm font-bold ${weightClass}`}>{wp.value} {unit}</p>
+        {prevDelta !== null && prevDateLabel && (
+          <p className={prevDeltaColor}>
+            {prevDelta > 0 ? '+' : ''}{prevDelta} {unit} from {prevDateLabel}
           </p>
         )}
-        {wp?.payload?.note && <p className="text-gray-500 dark:text-gray-400 mt-1">{wp.payload.note}</p>}
+        {goalDisplay != null && (
+          <p className="text-purple-500 mt-1">
+            Target {goalDisplay} {unit}
+            {vsTarget !== null && (
+              <span className={`ml-1 ${weightClass}`}>
+                ({vsTarget > 0 ? '+' : ''}{vsTarget} {vsTarget > 0 ? 'above' : 'below'})
+              </span>
+            )}
+          </p>
+        )}
+        {pt.note && <p className="text-gray-400 dark:text-gray-500 mt-1 italic">{pt.note}</p>}
       </div>
     );
   };
