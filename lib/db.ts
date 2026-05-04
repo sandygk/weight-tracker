@@ -10,7 +10,7 @@ function generateId(): string {
 }
 
 const entriesCol = (uid: string) => collection(db, 'users', uid, 'entries');
-const goalDocRef = (uid: string) => doc(db, 'users', uid, 'goal');
+const goalDocRef = (uid: string) => doc(db, 'users', uid, 'data', 'goal');
 
 export function subscribeEntries(uid: string, cb: (entries: WeightEntry[]) => void): Unsubscribe {
   return onSnapshot(
