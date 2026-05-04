@@ -1,5 +1,4 @@
 import { WeightEntry, Goal } from '@/types';
-import { Unit, toDisplay } from './units';
 
 const KEY = 'wt-data';
 
@@ -74,13 +73,6 @@ export function getLocalData(): { entries: WeightEntry[]; goal: Goal | null } {
   return load();
 }
 
-export function exportCSV(entries: WeightEntry[], unit: Unit): string {
-  const rows = ['Weight Date,Weight Measurement,Weight Unit,Note'];
-  for (const e of entries) {
-    const weight = toDisplay(e.weight, unit);
-    const dateIso = `${e.date}T12:00:00.000Z`;
-    const note = e.note ? `"${e.note.replace(/"/g, '""')}"` : '';
-    rows.push([dateIso, weight, unit, note].join(','));
-  }
-  return rows.join('\n');
+export function exportJSON(entries: WeightEntry[], goal: Goal | null): string {
+  return JSON.stringify({ version: 1, entries, goal }, null, 2);
 }

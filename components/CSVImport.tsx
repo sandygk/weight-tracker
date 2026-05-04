@@ -2,16 +2,15 @@
 
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { parseWeightFitCSV } from '@/lib/csvParser';
-import { importEntries } from '@/lib/data';
-import { Upload } from 'lucide-react';
+import { importEntries, saveGoal } from '@/lib/data';
+import { WeightEntry, Goal } from '@/types';
 
 interface Props {
   uid: string | null;
   onImport: () => void;
 }
 
-export default function CSVImport({ uid, onImport }: Props) {
+export default function DataImport({ uid, onImport }: Props) {
   const [status, setStatus] = useState<string | null>(null);
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -24,18 +23,19 @@ export default function CSVImport({ uid, onImport }: Props) {
     reader.onload = async ev => {
       try {
         const text = ev.target?.result as string;
-        const parsed = parseWeightFitCSV(text);
-        if (parsed.length === 0) {
-          setStatus('No valid entries found. Is this a WeightFit CSV?');
+        const data = JSON.parse(text);
+        if (!Array.isArray(data.entries)) {
+          setStatus('Invalid file. Expected a Weight Tracker JSON export.');
           return;
         }
-        const id = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
-        await importEntries(uid, parsed.map(e => ({ ...e, id: id() })));
-        setStatus(`✓ Imported ${parsed.length} entries.`);
+        const entries: WeightEntry[] = data.entries;
+        const goal: Goal | null = data.goal ?? null;
+        await importEntries(uid, entries);
+        if (goal) await saveGoal(uid, goal);
+        setStatus(`✓ Imported ${entries.length} entries${goal ? ' and goal' : ''}.`);
         onImport();
-      } catch (err) {
-        setStatus('Error parsing file. Please try again.');
-        console.error(err);
+      } catch {
+        setStatus('Could not parse file. Make sure it is a Weight Tracker JSON export.');
       } finally {
         input.value = '';
       }
@@ -47,13 +47,13 @@ export default function CSVImport({ uid, onImport }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Import from WeightFit</CardTitle>
+        <CardTitle className="text-base">Import Data</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        <p className="text-sm text-gray-500 dark:text-gray-400">Import a WeightFit CSV export. Duplicate dates will be updated.</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">Import a JSON backup. Duplicate dates will be updated.</p>
         <input
           type="file"
-          accept=".csv"
+          accept=".json"
           onChange={handleFile}
           className="block w-full text-sm text-gray-500 dark:text-gray-400
             file:mr-3 file:py-2 file:px-4

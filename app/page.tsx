@@ -1,8 +1,6 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { getRedirectResult } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
 import { Plus } from 'lucide-react';
 import BottomNav, { Tab } from '@/components/BottomNav';
 import OverviewTab from '@/components/OverviewTab';
@@ -33,10 +31,8 @@ function getTabFromHash(): Tab {
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'done'>('idle');
-  const [debugErrors, setDebugErrors] = useState<string[]>([]);
-  const addError = (msg: string) => setDebugErrors(prev => [...prev.slice(-4), msg]);
 
-  const [tab, setTab] = useState<Tab>('chart'); // start as 'chart' to match SSR, update from hash after mount
+  const [tab, setTab] = useState<Tab>('chart');
   const [entries, setEntries] = useState<WeightEntry[]>(() => getEntries());
   const [goal, setGoal] = useState<Goal | null>(() => getGoal());
   const [unit, setUnit] = useState<Unit>(() => getUnit());
@@ -66,8 +62,7 @@ export default function Home() {
           }
         }
         setUser(u);
-      } catch (e: any) {
-        addError('auth: ' + (e?.message ?? String(e)));
+      } catch {
         setUser(u);
       }
     });
@@ -84,7 +79,6 @@ export default function Home() {
     return () => { unsubEntries(); unsubGoal(); };
   }, [user, reload]);
 
-  // Sign out: snapshot current Firestore state to localStorage, then sign out
   async function handleSignOut() {
     replaceAll(entries, goal);
     await signOut();
@@ -99,7 +93,6 @@ export default function Home() {
     setTab(getTabFromHash());
     const onHashChange = () => setTab(getTabFromHash());
     window.addEventListener('hashchange', onHashChange);
-    if (auth) getRedirectResult(auth).catch(e => addError('redirect: ' + (e?.message ?? String(e))));
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
@@ -115,27 +108,13 @@ export default function Home() {
     if ((window as any).__pwaPrompt) setInstallPrompt((window as any).__pwaPrompt);
     const handler = (e: Event) => { e.preventDefault(); setInstallPrompt(e); };
     window.addEventListener('beforeinstallprompt', handler);
-    const onErr = (e: ErrorEvent) => addError('js: ' + e.message);
-    const onRej = (e: PromiseRejectionEvent) => addError('promise: ' + (e.reason?.message ?? String(e.reason)));
-    window.addEventListener('error', onErr);
-    window.addEventListener('unhandledrejection', onRej);
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handler);
-      window.removeEventListener('error', onErr);
-      window.removeEventListener('unhandledrejection', onRej);
-    };
+    return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
 
   const uid = user?.uid ?? null;
 
   return (
     <main className="bg-gray-50 dark:bg-gray-950 pb-20">
-      {debugErrors.length > 0 && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-red-600 text-white text-xs p-2 space-y-1">
-          {debugErrors.map((e, i) => <div key={i}>{e}</div>)}
-          <button onClick={() => setDebugErrors([])} className="underline">clear</button>
-        </div>
-      )}
       {tab !== 'chart' && (
         <header className="px-5 pt-5 pb-1">
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">

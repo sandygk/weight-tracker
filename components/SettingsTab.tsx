@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Unit, getUnit, saveUnit } from '@/lib/units';
-import { exportCSV } from '@/lib/storage';
+import { exportJSON } from '@/lib/storage';
 import { Theme, getTheme, saveTheme, applyTheme } from '@/lib/theme';
 import CSVImport from '@/components/CSVImport';
 import GoalSettings from '@/components/GoalSettings';
@@ -51,12 +51,12 @@ export default function SettingsTab({ uid, user, syncStatus, onSignOut, onUnitCh
   }
 
   function handleExport() {
-    const csv = exportCSV(entries, unit);
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const json = exportJSON(entries, goal);
+    const blob = new Blob([json], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `weight-${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `weight-${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -159,10 +159,10 @@ export default function SettingsTab({ uid, user, syncStatus, onSignOut, onUnitCh
         </CardHeader>
         <CardContent className="space-y-3">
           <Button onClick={handleExport} className="w-full">
-            Download CSV
+            Download JSON
           </Button>
           <p className="text-xs text-gray-400 dark:text-gray-500">
-            Exports all entries in {unit} with notes included.
+            Exports all entries and goal. Use to back up or transfer your data.
           </p>
         </CardContent>
       </Card>
