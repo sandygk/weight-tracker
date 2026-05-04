@@ -1,6 +1,8 @@
 import {
   GoogleAuthProvider,
-  signInWithRedirect,
+  signInWithPopup,
+  browserLocalPersistence,
+  setPersistence,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
@@ -11,16 +13,20 @@ import { auth } from './firebase';
 
 const googleProvider = new GoogleAuthProvider();
 
-export async function signInWithGoogle(): Promise<void> {
-  await signInWithRedirect(auth, googleProvider);
+export async function signInWithGoogle(): Promise<User> {
+  await setPersistence(auth, browserLocalPersistence);
+  const { user } = await signInWithPopup(auth, googleProvider);
+  return user;
 }
 
 export async function signUpWithEmail(email: string, password: string): Promise<User> {
+  await setPersistence(auth, browserLocalPersistence);
   const { user } = await createUserWithEmailAndPassword(auth, email, password);
   return user;
 }
 
 export async function signInWithEmail(email: string, password: string): Promise<User> {
+  await setPersistence(auth, browserLocalPersistence);
   const { user } = await signInWithEmailAndPassword(auth, email, password);
   return user;
 }

@@ -19,7 +19,8 @@ export default function SignInModal({ onClose }: Props) {
     setError('');
     setLoading(true);
     try {
-      await signInWithGoogle(); // redirects the page; won't return
+      await signInWithGoogle();
+      onClose();
     } catch (e: any) {
       setError(e.message ?? 'Google sign-in failed.');
       setLoading(false);

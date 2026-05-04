@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { getRedirectResult } from 'firebase/auth';
 import { Plus } from 'lucide-react';
 import BottomNav, { Tab } from '@/components/BottomNav';
 import OverviewTab from '@/components/OverviewTab';
@@ -10,7 +9,6 @@ import SettingsTab from '@/components/SettingsTab';
 import LogModal from '@/components/LogModal';
 import { subscribeEntries, subscribeGoal, getEntriesOnce } from '@/lib/db';
 import { onAuthChange, signOut, User } from '@/lib/firebaseAuth';
-import { auth } from '@/lib/firebase';
 import { getEntries, getGoal, getLocalData, replaceAll } from '@/lib/storage';
 import { importEntries, saveGoal } from '@/lib/data';
 import { getUnit, Unit } from '@/lib/units';
@@ -92,7 +90,6 @@ export default function Home() {
     setTab(getTabFromHash());
     const onHashChange = () => setTab(getTabFromHash());
     window.addEventListener('hashchange', onHashChange);
-    if (auth) getRedirectResult(auth).catch(() => {});
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
