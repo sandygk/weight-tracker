@@ -44,7 +44,8 @@ export default function Home() {
     setGoal(getGoal());
   }, []);
 
-  // Auth listener
+  // Auth listener — on sign-in, sync any localStorage entries that differ from
+  // Firestore (catches writes made before auth initialized, i.e. with null uid)
   useEffect(() => {
     return onAuthChange(async u => {
       try {
@@ -52,13 +53,18 @@ export default function Home() {
           const local = getLocalData();
           if (local.entries.length > 0) {
             const existing = await getEntriesOnce(u.uid);
-            if (existing.length === 0) {
+            const byDate = new Map(existing.map(e => [e.date, e]));
+            const toSync = local.entries.filter(e => {
+              const fs = byDate.get(e.date);
+              return !fs || fs.weight !== e.weight || fs.note !== e.note;
+            });
+            if (toSync.length > 0) {
               setSyncStatus('syncing');
-              await importEntries(u.uid, local.entries);
-              if (local.goal) await saveGoal(u.uid, local.goal);
+              await importEntries(u.uid, toSync);
               setSyncStatus('done');
               setTimeout(() => setSyncStatus('idle'), 3000);
             }
+            if (local.goal) await saveGoal(u.uid, local.goal);
           }
         }
         setUser(u);
