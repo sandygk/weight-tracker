@@ -251,12 +251,12 @@ export default function WeightChart({ entries, goal, unit, extendGoalLine = fals
           )}
 
           {colorRuns.map((run, i) => (
-            <Line key={i} data={run.data} type="monotone" dataKey="w"
+            <Line key={i} data={run.data} type="linear" dataKey="w"
               stroke={run.stroke} strokeWidth={2} dot={false} activeDot={false}
               connectNulls={false} isAnimationActive={false} legendType="none" />
           ))}
 
-          <Line type="monotone" dataKey="weight" stroke="none" strokeWidth={0}
+          <Line type="linear" dataKey="weight" stroke="none" strokeWidth={0}
             dot={<CustomDot />} activeDot={<ActiveDot />}
             connectNulls animationDuration={300} legendType="none" />
         </ComposedChart>
