@@ -13,16 +13,18 @@ const entriesCol = (uid: string) => collection(db, 'users', uid, 'entries');
 const goalDocRef = (uid: string) => doc(db, 'users', uid, 'goal');
 
 export function subscribeEntries(uid: string, cb: (entries: WeightEntry[]) => void): Unsubscribe {
-  return onSnapshot(entriesCol(uid), snap =>
-    cb(snap.docs
-      .map(d => ({ id: d.id, ...d.data() } as WeightEntry))
-      .sort((a, b) => a.date.localeCompare(b.date))),
+  return onSnapshot(
+    entriesCol(uid),
+    snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() } as WeightEntry)).sort((a, b) => a.date.localeCompare(b.date))),
+    () => {},
   );
 }
 
 export function subscribeGoal(uid: string, cb: (goal: Goal | null) => void): Unsubscribe {
-  return onSnapshot(goalDocRef(uid), snap =>
-    cb(snap.exists() ? (snap.data() as Goal) : null),
+  return onSnapshot(
+    goalDocRef(uid),
+    snap => cb(snap.exists() ? (snap.data() as Goal) : null),
+    () => {},
   );
 }
 

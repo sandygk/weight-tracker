@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { getRedirectResult } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 import { Plus } from 'lucide-react';
 import BottomNav, { Tab } from '@/components/BottomNav';
 import OverviewTab from '@/components/OverviewTab';
@@ -90,6 +92,7 @@ export default function Home() {
     setTab(getTabFromHash());
     const onHashChange = () => setTab(getTabFromHash());
     window.addEventListener('hashchange', onHashChange);
+    if (auth) getRedirectResult(auth).catch(() => {});
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
