@@ -32,6 +32,7 @@ function getTabFromHash(): Tab {
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
   const [authResolved, setAuthResolved] = useState(false);
+  const [dataReady, setDataReady] = useState(false);
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'done'>('idle');
 
   const [tab, setTab] = useState<Tab>('chart');
@@ -91,10 +92,14 @@ export default function Home() {
     if (!authResolved) return;
     if (!user) {
       reload();
+      setDataReady(true);
       return;
     }
-    const unsubEntries = subscribeEntries(user.uid, setEntries);
-    const unsubGoal = subscribeGoal(user.uid, setGoal);
+    setDataReady(false);
+    let entriesLoaded = false, goalLoaded = false;
+    const checkReady = () => { if (entriesLoaded && goalLoaded) setDataReady(true); };
+    const unsubEntries = subscribeEntries(user.uid, data => { setEntries(data); entriesLoaded = true; checkReady(); });
+    const unsubGoal = subscribeGoal(user.uid, data => { setGoal(data); goalLoaded = true; checkReady(); });
     return () => { unsubEntries(); unsubGoal(); };
   }, [user, authResolved, reload]);
 
@@ -147,7 +152,7 @@ export default function Home() {
       )}
 
       <div className="max-w-lg mx-auto">
-        {tab === 'chart' && <OverviewTab entries={entries} goal={goal} unit={unit} loading={!authResolved} />}
+        {tab === 'chart' && <OverviewTab entries={entries} goal={goal} unit={unit} loading={!dataReady} />}
 
         {tab === 'history' && (
           <div className="px-4 py-4 space-y-4">
