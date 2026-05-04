@@ -6,14 +6,14 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
   DialogFooter, DialogClose,
 } from '@/components/ui/dialog';
-import { deleteEntry, upsertEntry } from '@/lib/db';
+import { deleteEntry, upsertEntry } from '@/lib/data';
 import { WeightEntry, Goal } from '@/types';
 import { Unit, toDisplay } from '@/lib/units';
 import { expectedWeightOnDate, goalColorTier, TIER_CLASS } from '@/lib/goalCalculator';
 import { Trash2, NotebookPen } from 'lucide-react';
 
 interface Props {
-  uid: string;
+  uid: string | null;
   entries: WeightEntry[];
   unit: Unit;
   goal: Goal | null;

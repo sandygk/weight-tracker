@@ -30,10 +30,11 @@ export function getEntries(): WeightEntry[] {
   return load().entries.sort((a, b) => a.date.localeCompare(b.date));
 }
 
-export function upsertEntry(entry: Omit<WeightEntry, 'id'>): WeightEntry {
+export function upsertEntry(entry: Omit<WeightEntry, 'id'> & { id?: string }): WeightEntry {
   const store = load();
   const existing = store.entries.findIndex(e => e.date === entry.date);
-  const newEntry: WeightEntry = { ...entry, id: existing >= 0 ? store.entries[existing].id : generateId() };
+  const id = entry.id ?? (existing >= 0 ? store.entries[existing].id : generateId());
+  const newEntry: WeightEntry = { ...entry, id };
   if (existing >= 0) {
     store.entries[existing] = newEntry;
   } else {
@@ -41,6 +42,10 @@ export function upsertEntry(entry: Omit<WeightEntry, 'id'>): WeightEntry {
   }
   save(store);
   return newEntry;
+}
+
+export function replaceAll(entries: WeightEntry[], goal: Goal | null) {
+  save({ entries, goal });
 }
 
 export function deleteEntry(id: string) {

@@ -3,11 +3,11 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { parseWeightFitCSV } from '@/lib/csvParser';
-import { importEntries } from '@/lib/db';
+import { importEntries } from '@/lib/data';
 import { Upload } from 'lucide-react';
 
 interface Props {
-  uid: string;
+  uid: string | null;
   onImport: () => void;
 }
 

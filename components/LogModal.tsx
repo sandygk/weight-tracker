@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { upsertEntry } from '@/lib/db';
+import { upsertEntry } from '@/lib/data';
 import { WeightEntry } from '@/types';
 import { Unit, toDisplay, toStorage } from '@/lib/units';
 
 interface Props {
-  uid: string;
+  uid: string | null;
   entries: WeightEntry[];
   unit: Unit;
   onSave: () => void;

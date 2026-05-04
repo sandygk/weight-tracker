@@ -7,11 +7,10 @@ import OverviewTab from '@/components/OverviewTab';
 import WeightHistory from '@/components/WeightHistory';
 import SettingsTab from '@/components/SettingsTab';
 import LogModal from '@/components/LogModal';
-import SignInScreen from '@/components/SignInScreen';
-import MigratePrompt from '@/components/MigratePrompt';
-import { subscribeEntries, subscribeGoal } from '@/lib/db';
+import { subscribeEntries, subscribeGoal, getEntriesOnce } from '@/lib/db';
 import { onAuthChange, signOut, User } from '@/lib/firebaseAuth';
-import { getLocalData } from '@/lib/storage';
+import { getEntries, getGoal, getLocalData, replaceAll } from '@/lib/storage';
+import { importEntries, saveGoal } from '@/lib/data';
 import { getUnit, Unit } from '@/lib/units';
 import { getTheme, applyTheme } from '@/lib/theme';
 import { WeightEntry, Goal } from '@/types';
@@ -31,39 +30,56 @@ function getTabFromHash(): Tab {
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
-  const [authLoading, setAuthLoading] = useState(true);
-  const [migrateEntries, setMigrateEntries] = useState<WeightEntry[] | null>(null);
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'done'>('idle');
 
   const [tab, setTab] = useState<Tab>(() => getTabFromHash());
-  const [entries, setEntries] = useState<WeightEntry[]>([]);
-  const [goal, setGoal] = useState<Goal | null>(null);
+  const [entries, setEntries] = useState<WeightEntry[]>(() => getEntries());
+  const [goal, setGoal] = useState<Goal | null>(() => getGoal());
   const [unit, setUnit] = useState<Unit>(() => getUnit());
   const [showLog, setShowLog] = useState(false);
   const [installPrompt, setInstallPrompt] = useState<any>(null);
 
-  // Auth state
+  const reload = useCallback(() => {
+    setEntries(getEntries());
+    setGoal(getGoal());
+  }, []);
+
+  // Auth listener
   useEffect(() => {
-    return onAuthChange(u => {
-      setUser(u);
-      setAuthLoading(false);
+    return onAuthChange(async u => {
       if (u) {
         const local = getLocalData();
-        if (local.entries.length > 0) setMigrateEntries(local.entries);
+        if (local.entries.length > 0) {
+          const existing = await getEntriesOnce(u.uid);
+          if (existing.length === 0) {
+            setSyncStatus('syncing');
+            await importEntries(u.uid, local.entries);
+            if (local.goal) await saveGoal(u.uid, local.goal);
+            setSyncStatus('done');
+            setTimeout(() => setSyncStatus('idle'), 3000);
+          }
+        }
       }
+      setUser(u);
     });
   }, []);
 
   // Firestore subscriptions — active only while signed in
   useEffect(() => {
     if (!user) {
-      setEntries([]);
-      setGoal(null);
+      reload();
       return;
     }
     const unsubEntries = subscribeEntries(user.uid, setEntries);
     const unsubGoal = subscribeGoal(user.uid, setGoal);
     return () => { unsubEntries(); unsubGoal(); };
-  }, [user]);
+  }, [user, reload]);
+
+  // Sign out: snapshot current Firestore state to localStorage, then sign out
+  async function handleSignOut() {
+    replaceAll(entries, goal);
+    await signOut();
+  }
 
   const handleTabChange = useCallback((t: Tab) => {
     setTab(t);
@@ -91,26 +107,10 @@ export default function Home() {
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
 
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
-      </div>
-    );
-  }
-
-  if (!user) return <SignInScreen />;
+  const uid = user?.uid ?? null;
 
   return (
     <main className="bg-gray-50 dark:bg-gray-950 pb-20">
-      {migrateEntries && (
-        <MigratePrompt
-          uid={user.uid}
-          entries={migrateEntries}
-          onDone={() => setMigrateEntries(null)}
-        />
-      )}
-
       {tab !== 'chart' && (
         <header className="px-5 pt-5 pb-1">
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">
@@ -127,19 +127,20 @@ export default function Home() {
 
         {tab === 'history' && (
           <div className="px-4 py-4 space-y-4">
-            <WeightHistory uid={user.uid} entries={entries} unit={unit} goal={goal} onChange={() => {}} />
+            <WeightHistory uid={uid} entries={entries} unit={unit} goal={goal} onChange={reload} />
           </div>
         )}
 
         {tab === 'settings' && (
           <SettingsTab
-            uid={user.uid}
+            uid={uid}
             user={user}
-            onSignOut={signOut}
+            syncStatus={syncStatus}
+            onSignOut={handleSignOut}
             onUnitChange={setUnit}
             installPrompt={installPrompt}
             onInstalled={() => setInstallPrompt(null)}
-            onImport={() => {}}
+            onImport={reload}
             goal={goal}
             entries={entries}
           />
@@ -158,7 +159,7 @@ export default function Home() {
       )}
 
       {showLog && (
-        <LogModal uid={user.uid} entries={entries} unit={unit} onSave={() => {}} onClose={() => setShowLog(false)} />
+        <LogModal uid={uid} entries={entries} unit={unit} onSave={reload} onClose={() => setShowLog(false)} />
       )}
 
       <BottomNav active={tab} onChange={handleTabChange} />

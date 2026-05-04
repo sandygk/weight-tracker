@@ -4,14 +4,14 @@ import { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { saveGoal, clearGoal } from '@/lib/db';
+import { saveGoal, clearGoal } from '@/lib/data';
 import { goalEndDate } from '@/lib/goalCalculator';
 import { Goal, WeightEntry } from '@/types';
 import { Unit, toDisplay, toStorage } from '@/lib/units';
 import { Target, Trash2 } from 'lucide-react';
 
 interface Props {
-  uid: string;
+  uid: string | null;
   goal: Goal | null;
   entries: WeightEntry[];
   unit: Unit;

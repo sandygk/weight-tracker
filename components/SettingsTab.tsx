@@ -9,13 +9,15 @@ import { Theme, getTheme, saveTheme, applyTheme } from '@/lib/theme';
 import CSVImport from '@/components/CSVImport';
 import GoalSettings from '@/components/GoalSettings';
 import SegmentedControl from '@/components/SegmentedControl';
+import SignInModal from '@/components/SignInScreen';
 import { Goal, WeightEntry } from '@/types';
-import { Sun, Moon, Monitor, LogOut } from 'lucide-react';
+import { Sun, Moon, Monitor, LogOut, CloudUpload } from 'lucide-react';
 import { User } from '@/lib/firebaseAuth';
 
 interface Props {
-  uid: string;
-  user: User;
+  uid: string | null;
+  user: User | null;
+  syncStatus: 'idle' | 'syncing' | 'done';
   onSignOut: () => void;
   onUnitChange: (unit: Unit) => void;
   installPrompt: any;
@@ -25,9 +27,10 @@ interface Props {
   entries: WeightEntry[];
 }
 
-export default function SettingsTab({ uid, user, onSignOut, onUnitChange, installPrompt, onInstalled, onImport, goal, entries }: Props) {
+export default function SettingsTab({ uid, user, syncStatus, onSignOut, onUnitChange, installPrompt, onInstalled, onImport, goal, entries }: Props) {
   const [unit, setUnit] = useState<Unit>(() => getUnit());
   const [theme, setTheme] = useState<Theme>(() => getTheme());
+  const [showSignIn, setShowSignIn] = useState(false);
   const [installed, setInstalled] = useState(
     () => typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches
   );
@@ -70,16 +73,43 @@ export default function SettingsTab({ uid, user, onSignOut, onUnitChange, instal
 
   return (
     <div className="px-4 py-4 space-y-4">
+      {showSignIn && <SignInModal onClose={() => setShowSignIn(false)} />}
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Account</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <p className="text-sm text-gray-600 dark:text-gray-300 truncate">{user.email ?? user.displayName ?? 'Signed in'}</p>
-          <Button variant="outline" onClick={onSignOut} className="w-full flex items-center gap-2">
-            <LogOut size={14} />
-            Sign Out
-          </Button>
+          {user ? (
+            <>
+              <div className="flex items-center gap-2">
+                <p className="text-sm text-gray-600 dark:text-gray-300 truncate flex-1">
+                  {user.email ?? user.displayName ?? 'Signed in'}
+                </p>
+                {syncStatus === 'syncing' && (
+                  <span className="flex items-center gap-1 text-xs text-blue-500">
+                    <CloudUpload size={12} className="animate-pulse" /> Syncing…
+                  </span>
+                )}
+                {syncStatus === 'done' && (
+                  <span className="text-xs text-green-500">Synced ✓</span>
+                )}
+              </div>
+              <Button variant="outline" onClick={onSignOut} className="w-full flex items-center gap-2">
+                <LogOut size={14} />
+                Sign Out
+              </Button>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Sign in to back up your data and sync across devices.
+              </p>
+              <Button onClick={() => setShowSignIn(true)} className="w-full">
+                Sign In
+              </Button>
+            </>
+          )}
         </CardContent>
       </Card>
 

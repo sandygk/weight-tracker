@@ -1,6 +1,6 @@
 import {
   collection, doc, setDoc, deleteDoc, onSnapshot,
-  writeBatch, Unsubscribe,
+  writeBatch, getDocs, Unsubscribe,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { WeightEntry, Goal } from '@/types';
@@ -44,6 +44,11 @@ export async function saveGoal(uid: string, goal: Goal): Promise<void> {
 
 export async function clearGoal(uid: string): Promise<void> {
   await deleteDoc(goalDocRef(uid));
+}
+
+export async function getEntriesOnce(uid: string): Promise<WeightEntry[]> {
+  const snap = await getDocs(entriesCol(uid));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() } as WeightEntry));
 }
 
 export async function importEntries(uid: string, entries: WeightEntry[]): Promise<void> {
