@@ -204,20 +204,31 @@ export default function SettingsTab({ uid, user, syncStatus, onSignOut, onUnitCh
           <CardTitle className="text-base">Debug Log</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => setLogs(getLogs())}
-          >
-            Refresh Logs
-          </Button>
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => { clearLogs(); setLogs([]); }}
-          >
-            Clear Logs
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => setLogs(getLogs())}
+            >
+              Refresh
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => navigator.clipboard.writeText(logs.join('\n'))}
+              disabled={logs.length === 0}
+            >
+              Copy
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => { clearLogs(); setLogs([]); }}
+              disabled={logs.length === 0}
+            >
+              Clear
+            </Button>
+          </div>
           {logs.length === 0 ? (
             <p className="text-xs text-gray-400 dark:text-gray-500">No logs yet.</p>
           ) : (
