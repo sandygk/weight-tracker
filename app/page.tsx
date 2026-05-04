@@ -31,6 +31,7 @@ function getTabFromHash(): Tab {
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
+  const [authResolved, setAuthResolved] = useState(false);
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'done'>('idle');
 
   const [tab, setTab] = useState<Tab>('chart');
@@ -73,15 +74,21 @@ export default function Home() {
           }
         }
         setUser(u);
+        setAuthResolved(true);
       } catch (e) {
         dlog(`onAuthChange ERROR: ${e}`);
         setUser(u);
+        setAuthResolved(true);
       }
     });
   }, []);
 
-  // Firestore subscriptions — active only while signed in
+  // Firestore subscriptions — active only while signed in.
+  // Wait for auth to resolve before loading anything: if signed in, use Firestore
+  // (with offline cache for instant first load); if not signed in, use localStorage.
+  // This prevents localStorage data flashing before Firestore data arrives.
   useEffect(() => {
+    if (!authResolved) return;
     if (!user) {
       reload();
       return;
@@ -89,7 +96,7 @@ export default function Home() {
     const unsubEntries = subscribeEntries(user.uid, setEntries);
     const unsubGoal = subscribeGoal(user.uid, setGoal);
     return () => { unsubEntries(); unsubGoal(); };
-  }, [user, reload]);
+  }, [user, authResolved, reload]);
 
   async function handleSignOut() {
     replaceAll(entries, goal);
