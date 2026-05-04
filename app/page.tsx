@@ -12,6 +12,7 @@ import { onAuthChange, signOut, User } from '@/lib/firebaseAuth';
 import { getEntries, getGoal, getLocalData, replaceAll } from '@/lib/storage';
 import { importEntries, saveGoal } from '@/lib/data';
 import { getUnit, Unit } from '@/lib/units';
+import { dlog } from '@/lib/debugLog';
 import { getTheme, applyTheme } from '@/lib/theme';
 import { WeightEntry, Goal } from '@/types';
 
@@ -48,16 +49,20 @@ export default function Home() {
   // Firestore (catches writes made before auth initialized, i.e. with null uid)
   useEffect(() => {
     return onAuthChange(async u => {
+      dlog(`onAuthChange uid=${u?.uid ?? 'null'} email=${u?.email ?? 'none'}`);
       try {
         if (u) {
           const local = getLocalData();
+          dlog(`onAuthChange localEntries=${local.entries.length} hasGoal=${!!local.goal}`);
           if (local.entries.length > 0) {
             const existing = await getEntriesOnce(u.uid);
+            dlog(`onAuthChange firestoreEntries=${existing.length}`);
             const byDate = new Map(existing.map(e => [e.date, e]));
             const toSync = local.entries.filter(e => {
               const fs = byDate.get(e.date);
               return !fs || fs.weight !== e.weight || fs.note !== e.note;
             });
+            dlog(`onAuthChange toSync=${toSync.length}`);
             if (toSync.length > 0) {
               setSyncStatus('syncing');
               await importEntries(u.uid, toSync);
@@ -68,7 +73,8 @@ export default function Home() {
           }
         }
         setUser(u);
-      } catch {
+      } catch (e) {
+        dlog(`onAuthChange ERROR: ${e}`);
         setUser(u);
       }
     });

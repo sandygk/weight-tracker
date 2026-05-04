@@ -13,6 +13,7 @@ import SignInModal from '@/components/SignInScreen';
 import { Goal, WeightEntry } from '@/types';
 import { Sun, Moon, Monitor, LogOut, CloudUpload } from 'lucide-react';
 import { User } from '@/lib/firebaseAuth';
+import { getLogs, clearLogs } from '@/lib/debugLog';
 
 interface Props {
   uid: string | null;
@@ -31,6 +32,7 @@ export default function SettingsTab({ uid, user, syncStatus, onSignOut, onUnitCh
   const [unit, setUnit] = useState<Unit>(() => getUnit());
   const [theme, setTheme] = useState<Theme>(() => getTheme());
   const [showSignIn, setShowSignIn] = useState(false);
+  const [logs, setLogs] = useState<string[]>(() => getLogs());
   const [installed, setInstalled] = useState(
     () => typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches
   );
@@ -194,6 +196,34 @@ export default function SettingsTab({ uid, user, syncStatus, onSignOut, onUnitCh
             <p className="text-xs text-gray-500 dark:text-gray-400">
               Open the browser menu and select <strong>Install App</strong> or <strong>Add to Home Screen</strong>.
             </p>
+          )}
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Debug Log</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => setLogs(getLogs())}
+          >
+            Refresh Logs
+          </Button>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => { clearLogs(); setLogs([]); }}
+          >
+            Clear Logs
+          </Button>
+          {logs.length === 0 ? (
+            <p className="text-xs text-gray-400 dark:text-gray-500">No logs yet.</p>
+          ) : (
+            <pre className="text-xs text-gray-700 dark:text-gray-300 whitespace-pre-wrap break-all bg-gray-100 dark:bg-gray-800 rounded p-2 max-h-64 overflow-y-auto">
+              {logs.join('\n')}
+            </pre>
           )}
         </CardContent>
       </Card>
