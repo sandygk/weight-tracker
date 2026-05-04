@@ -34,9 +34,9 @@ export default function Home() {
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'done'>('idle');
 
   const [tab, setTab] = useState<Tab>('chart');
-  const [entries, setEntries] = useState<WeightEntry[]>(() => getEntries());
-  const [goal, setGoal] = useState<Goal | null>(() => getGoal());
-  const [unit, setUnit] = useState<Unit>(() => getUnit());
+  const [entries, setEntries] = useState<WeightEntry[]>([]);
+  const [goal, setGoal] = useState<Goal | null>(null);
+  const [unit, setUnit] = useState<Unit>('lb');
   const [showLog, setShowLog] = useState(false);
   const [installPrompt, setInstallPrompt] = useState<any>(null);
 
@@ -103,6 +103,7 @@ export default function Home() {
 
   useEffect(() => {
     setTab(getTabFromHash());
+    setUnit(getUnit());
     const onHashChange = () => setTab(getTabFromHash());
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);
