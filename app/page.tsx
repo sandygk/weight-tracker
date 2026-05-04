@@ -139,6 +139,9 @@ export default function Home() {
   }, []);
 
   const uid = user?.uid ?? null;
+  // When signed in, Firestore subscriptions update state automatically — calling
+  // reload() would read stale localStorage over live Firestore data.
+  const onChange = user ? () => {} : reload;
 
   return (
     <main className="bg-gray-50 dark:bg-gray-950 pb-20">
@@ -158,7 +161,7 @@ export default function Home() {
 
         {tab === 'history' && (
           <div className="px-4 py-4 space-y-4">
-            <WeightHistory uid={uid} entries={entries} unit={unit} goal={goal} onChange={reload} />
+            <WeightHistory uid={uid} entries={entries} unit={unit} goal={goal} onChange={onChange} />
           </div>
         )}
 
@@ -171,7 +174,7 @@ export default function Home() {
             onUnitChange={setUnit}
             installPrompt={installPrompt}
             onInstalled={() => setInstallPrompt(null)}
-            onImport={reload}
+            onImport={onChange}
             goal={goal}
             entries={entries}
           />
@@ -190,7 +193,7 @@ export default function Home() {
       )}
 
       {showLog && (
-        <LogModal uid={uid} entries={entries} unit={unit} onSave={reload} onClose={() => setShowLog(false)} />
+        <LogModal uid={uid} entries={entries} unit={unit} onSave={onChange} onClose={() => setShowLog(false)} />
       )}
 
       <BottomNav active={tab} onChange={handleTabChange} />
