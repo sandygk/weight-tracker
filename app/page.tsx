@@ -59,11 +59,11 @@ export default function Home() {
           if (local.entries.length > 0) {
             const existing = await getEntriesOnce(u.uid);
             dlog(`onAuthChange firestoreEntries=${existing.length}`);
-            const byDate = new Map(existing.map(e => [e.date, e]));
-            const toSync = local.entries.filter(e => {
-              const fs = byDate.get(e.date);
-              return !fs || fs.weight !== e.weight || fs.note !== e.note;
-            });
+            const firestoreDates = new Set(existing.map(e => e.date));
+            // Only push entries that don't exist in Firestore at all (written before
+            // auth initialized with null uid). Never overwrite existing Firestore
+            // entries with local data — Firestore is the source of truth when signed in.
+            const toSync = local.entries.filter(e => !firestoreDates.has(e.date));
             dlog(`onAuthChange toSync=${toSync.length}`);
             if (toSync.length > 0) {
               setSyncStatus('syncing');
@@ -71,7 +71,8 @@ export default function Home() {
               setSyncStatus('done');
               setTimeout(() => setSyncStatus('idle'), 3000);
             }
-            if (local.goal) await saveGoal(u.uid, local.goal);
+            // Only push goal on first sign-in (no Firestore entries yet)
+            if (local.goal && existing.length === 0) await saveGoal(u.uid, local.goal);
           }
         }
         setUser(u);
