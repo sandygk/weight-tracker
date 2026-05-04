@@ -210,7 +210,7 @@ export default function WeightChart({ entries, goal, unit, extendGoalLine = fals
         {goalDisplay != null && vsTarget !== null && (
           <p className="mt-1 text-gray-400 dark:text-gray-500">
             <span className={weightClass}>{vsTarget > 0 ? '+' : ''}{vsTarget} {unit}</span>
-            {' '}vs target (<span className="text-purple-500">{goalDisplay}</span>)
+            {' '}vs target (<span className="text-blue-500">{goalDisplay}</span>)
           </p>
         )}
         {pt.note && <p className="text-gray-400 dark:text-gray-500 mt-1 italic">{pt.note}</p>}
@@ -236,10 +236,10 @@ export default function WeightChart({ entries, goal, unit, extendGoalLine = fals
             axisLine={false} tickLine={false} />
           <Tooltip content={<CustomTooltip />} cursor={false} />
 
-          {/* Visual goal line: purple dashed, exactly 2 anchor points */}
+          {/* Visual goal line: blue dashed, exactly 2 anchor points */}
           {goal && goalAnchors && goalAnchors.length > 0 && (
             <Line data={goalAnchors} type="linear" dataKey="gw"
-              stroke="#a855f7" strokeWidth={1.5} strokeDasharray="5 5"
+              stroke="#3b82f6" strokeWidth={1.5} strokeDasharray="5 5"
               dot={false} activeDot={false} connectNulls
               isAnimationActive={false} legendType="none" />
           )}

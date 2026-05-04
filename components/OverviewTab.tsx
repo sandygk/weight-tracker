@@ -181,7 +181,7 @@ export default function OverviewTab({ entries, goal, unit }: Props) {
             (isGainGoal ? remainingToGoal >= 0 : remainingToGoal <= 0)
               ? <p className="text-xs font-semibold text-green-500">Reached!</p>
               : <>
-                  <p className="text-xs font-semibold text-purple-500">
+                  <p className="text-xs font-semibold text-blue-500">
                     {Math.abs(remainingToGoal).toFixed(1)} {unit}
                   </p>
                   <p className="text-gray-400 dark:text-gray-500 font-normal" style={{ fontSize: 10 }}>{isGainGoal ? 'to gain' : 'to go'}</p>

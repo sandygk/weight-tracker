@@ -3,19 +3,19 @@ import { Goal } from '@/types';
 export type ColorTier = 'green' | 'lime' | 'orange' | 'red' | 'default';
 
 export const TIER_CLASS: Record<ColorTier, string> = {
-  green: 'text-green-500',
-  lime:  'text-lime-500',
+  green: 'text-green-700',
+  lime:  'text-green-500',
   orange: 'text-orange-500',
   red:   'text-red-500',
-  default: 'text-blue-600',
+  default: 'text-gray-900 dark:text-gray-200',
 };
 
 export const TIER_STROKE: Record<ColorTier, string> = {
-  green: '#22c55e',
-  lime:  '#84cc16',
+  green: '#15803d',
+  lime:  '#22c55e',
   orange: '#f97316',
   red:   '#ef4444',
-  default: '#3b82f6',
+  default: '#6b7280',
 };
 
 export function goalColorTier(
