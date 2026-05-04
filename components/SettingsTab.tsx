@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Unit, getUnit, saveUnit } from '@/lib/units';
@@ -33,6 +33,10 @@ export default function SettingsTab({ uid, user, syncStatus, onSignOut, onUnitCh
   const [theme, setTheme] = useState<Theme>(() => getTheme());
   const [showSignIn, setShowSignIn] = useState(false);
   const [logs, setLogs] = useState<string[]>(() => getLogs());
+  useEffect(() => {
+    const id = setInterval(() => setLogs(getLogs()), 2000);
+    return () => clearInterval(id);
+  }, []);
   const [installed, setInstalled] = useState(
     () => typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches
   );
