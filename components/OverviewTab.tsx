@@ -63,8 +63,6 @@ export default function OverviewTab({ entries, goal, unit, loading = false }: Pr
   const [range, setRange] = useState<RangeLabel>('3M');
   useEffect(() => { setRange(loadRange()); }, []);
 
-  if (loading) return <OverviewSkeleton />;
-
   const sorted = useMemo(
     () => [...entries].sort((a, b) => a.date.localeCompare(b.date)),
     [entries],
@@ -96,6 +94,8 @@ export default function OverviewTab({ entries, goal, unit, loading = false }: Pr
     const cutoffStr = cutoff.toISOString().split('T')[0];
     return sorted.filter(e => e.date >= cutoffStr);
   }, [sorted, activeRange, goal]);
+
+  if (loading) return <OverviewSkeleton />;
 
   const latest = sorted.length > 0 ? sorted[sorted.length - 1] : null;
   const rangeFirst = rangeEntries.length > 0 ? rangeEntries[0] : null;
