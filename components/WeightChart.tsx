@@ -6,7 +6,6 @@ import {
 import { WeightEntry, Goal } from '@/types';
 import { goalEndDate, expectedWeightOnDate, goalColorTier, TIER_CLASS, TIER_STROKE, ColorTier } from '@/lib/goalCalculator';
 import { Unit, toDisplay } from '@/lib/units';
-import { useIsDark } from '@/lib/theme';
 
 interface ChartPoint {
   date: string;
@@ -132,8 +131,6 @@ interface Props {
 }
 
 export default function WeightChart({ entries, goal, unit, extendGoalLine = false }: Props) {
-  const isDark = useIsDark();
-
   if (entries.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-56 gap-3 text-gray-300 dark:text-gray-600">
@@ -171,7 +168,7 @@ export default function WeightChart({ entries, goal, unit, extendGoalLine = fals
   const ActiveDot = (props: any) => {
     const { cx, cy, payload } = props;
     if (cx == null || cy == null) return null;
-    return <circle cx={cx} cy={cy} r={6} fill={getDotColor(payload)} stroke={isDark ? '#030712' : 'white'} strokeWidth={2} />;
+    return <circle cx={cx} cy={cy} r={6} fill={getDotColor(payload)} stroke="var(--wt-dot-bg)" strokeWidth={2} />;
   };
 
   const CustomTooltip = ({ active, payload }: any) => {
@@ -222,17 +219,17 @@ export default function WeightChart({ entries, goal, unit, extendGoalLine = fals
     <div style={{ outline: 'none', WebkitTapHighlightColor: 'transparent' }}>
       <ResponsiveContainer width="100%" height={260}>
         <ComposedChart data={data} margin={{ top: 4, right: 12, left: -20, bottom: 0 }} tabIndex={-1}>
-          <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#1f2937' : '#f3f4f6'} vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--wt-grid)" vertical={false} />
           <XAxis
             type="number" dataKey="ts" scale="time"
             domain={['dataMin', 'dataMax']}
             ticks={data.map(p => p.ts)}
             interval="preserveStartEnd"
             tickFormatter={(ts: number) => fmt(new Date(ts).toISOString().split('T')[0])}
-            tick={{ fontSize: 10, fill: isDark ? '#6b7280' : '#9ca3af' }}
+            tick={{ fontSize: 10, fill: 'var(--wt-tick)' }}
             axisLine={false} tickLine={false}
           />
-          <YAxis domain={[yMin, yMax]} tick={{ fontSize: 10, fill: isDark ? '#6b7280' : '#9ca3af' }}
+          <YAxis domain={[yMin, yMax]} tick={{ fontSize: 10, fill: 'var(--wt-tick)' }}
             axisLine={false} tickLine={false} />
           <Tooltip content={<CustomTooltip />} cursor={false} />
 
