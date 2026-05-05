@@ -161,7 +161,7 @@ export default function OverviewTab({ entries, goal, unit, loading = false }: Pr
       </div>
 
       {/* Stats: Start | Today | End Goal */}
-      <div className="grid grid-cols-3 text-center px-2 pb-4">
+      <div className="grid grid-cols-3 text-center px-2 pb-7">
         {/* Start */}
         <div className="flex flex-col items-center gap-0.5 px-1">
           <p className="text-xs text-gray-400 dark:text-gray-500">Start · {rangeFirst ? formatShortDate(rangeFirst.date) : '—'}</p>
