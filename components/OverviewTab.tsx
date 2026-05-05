@@ -10,10 +10,11 @@ import { localDateStr } from '@/lib/date';
 const RANGE_KEY = 'wt-range';
 
 const STATIC_RANGES = [
-  { label: '1W', name: '1W',   days: 7 },
-  { label: '1M', name: '1M',  days: 30 },
-  { label: '3M', name: '3M', days: 90 },
-  { label: '6M', name: '6M', days: 180 },
+  { label: '1W',  name: '1W',  days: 7 },
+  { label: '1M',  name: '1M',  days: 30 },
+  { label: '3M',  name: '3M',  days: 90 },
+  { label: '6M',  name: '6M',  days: 180 },
+  { label: '1Y',  name: '1Y',  days: 365 },
   { label: 'ALL', name: 'All', days: Infinity },
 ] as const;
 
@@ -152,11 +153,11 @@ export default function OverviewTab({ entries, goal, unit, loading = false }: Pr
           onChange={e => handleRangeChange(e.target.value as RangeLabel)}
           className="appearance-none bg-transparent text-xs font-semibold text-gray-500 dark:text-gray-400 cursor-pointer focus:outline-none text-right"
         >
+          {goal && <option value="Since">Since diet start</option>}
+          {goal && goalIsFuture && <option value="Goal">Diet start to end</option>}
           {STATIC_RANGES.map(r => (
             <option key={r.label} value={r.label}>{r.name}</option>
           ))}
-          {goal && <option value="Since">Since diet start</option>}
-          {goal && goalIsFuture && <option value="Goal">Diet start to end</option>}
         </select>
       </div>
 
