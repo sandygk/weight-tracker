@@ -10,7 +10,7 @@ interface Props {
   onClose: () => void;
 }
 
-async function migrateLocalData(uid: string) {
+async function doMigrate(uid: string) {
   const { entries, goal } = getLocalData();
   if (entries.length > 0) await importEntries(uid, entries);
   if (goal) await saveGoal(uid, goal);
@@ -23,16 +23,28 @@ export default function SignInModal({ onClose }: Props) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [pendingUid, setPendingUid] = useState<string | null>(null);
+  const [localCount, setLocalCount] = useState(0);
+
+  function checkLocalData(uid: string): boolean {
+    const { entries } = getLocalData();
+    if (entries.length === 0) return false;
+    setLocalCount(entries.length);
+    setPendingUid(uid);
+    return true;
+  }
 
   async function handleGoogle() {
     setError('');
     setLoading(true);
     try {
       const { user, isNewUser } = await signInWithGoogle();
-      if (isNewUser) await migrateLocalData(user.uid);
+      if (isNewUser && checkLocalData(user.uid)) return;
+      if (isNewUser) clearData();
       onClose();
     } catch (e: any) {
       setError(e.message ?? 'Google sign-in failed.');
+    } finally {
       setLoading(false);
     }
   }
@@ -44,7 +56,8 @@ export default function SignInModal({ onClose }: Props) {
     try {
       if (mode === 'signup') {
         const user = await signUpWithEmail(email, password);
-        await migrateLocalData(user.uid);
+        if (checkLocalData(user.uid)) return;
+        clearData();
       } else {
         await signInWithEmail(email, password);
       }
@@ -60,6 +73,44 @@ export default function SignInModal({ onClose }: Props) {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleTransfer(transfer: boolean) {
+    if (!pendingUid) return;
+    setLoading(true);
+    if (transfer) await doMigrate(pendingUid);
+    else clearData();
+    setLoading(false);
+    onClose();
+  }
+
+  if (pendingUid) {
+    return (
+      <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-6">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-xs shadow-2xl p-6 space-y-4">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">Transfer your data?</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            You have <span className="font-medium text-gray-700 dark:text-gray-200">{localCount} {localCount === 1 ? 'entry' : 'entries'}</span> from your unsigned session. Would you like to transfer them to your new account?
+          </p>
+          <button
+            type="button"
+            disabled={loading}
+            onClick={() => handleTransfer(true)}
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl py-2.5 text-sm transition-colors disabled:opacity-50"
+          >
+            {loading ? 'Transferring…' : 'Yes, transfer my data'}
+          </button>
+          <button
+            type="button"
+            disabled={loading}
+            onClick={() => handleTransfer(false)}
+            className="w-full border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 font-medium rounded-xl py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+          >
+            No, start fresh
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
