@@ -1,6 +1,7 @@
 import {
   GoogleAuthProvider,
   signInWithPopup,
+  getAdditionalUserInfo,
   browserLocalPersistence,
   setPersistence,
   createUserWithEmailAndPassword,
@@ -13,10 +14,10 @@ import { auth } from './firebase';
 
 const googleProvider = new GoogleAuthProvider();
 
-export async function signInWithGoogle(): Promise<User> {
+export async function signInWithGoogle(): Promise<{ user: User; isNewUser: boolean }> {
   await setPersistence(auth, browserLocalPersistence);
-  const { user } = await signInWithPopup(auth, googleProvider);
-  return user;
+  const result = await signInWithPopup(auth, googleProvider);
+  return { user: result.user, isNewUser: getAdditionalUserInfo(result)?.isNewUser ?? false };
 }
 
 export async function signUpWithEmail(email: string, password: string): Promise<User> {

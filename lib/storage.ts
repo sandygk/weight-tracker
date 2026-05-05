@@ -73,6 +73,10 @@ export function getLocalData(): { entries: WeightEntry[]; goal: Goal | null } {
   return load();
 }
 
+export function clearData() {
+  if (typeof window !== 'undefined') localStorage.removeItem(KEY);
+}
+
 export function exportJSON(entries: WeightEntry[], goal: Goal | null): string {
   return JSON.stringify({ version: 1, entries, goal }, null, 2);
 }

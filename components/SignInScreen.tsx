@@ -3,9 +3,18 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
 import { signInWithGoogle, signInWithEmail, signUpWithEmail } from '@/lib/firebaseAuth';
+import { getLocalData, clearData } from '@/lib/storage';
+import { importEntries, saveGoal } from '@/lib/db';
 
 interface Props {
   onClose: () => void;
+}
+
+async function migrateLocalData(uid: string) {
+  const { entries, goal } = getLocalData();
+  if (entries.length > 0) await importEntries(uid, entries);
+  if (goal) await saveGoal(uid, goal);
+  clearData();
 }
 
 export default function SignInModal({ onClose }: Props) {
@@ -19,7 +28,8 @@ export default function SignInModal({ onClose }: Props) {
     setError('');
     setLoading(true);
     try {
-      await signInWithGoogle();
+      const { user, isNewUser } = await signInWithGoogle();
+      if (isNewUser) await migrateLocalData(user.uid);
       onClose();
     } catch (e: any) {
       setError(e.message ?? 'Google sign-in failed.');
@@ -33,7 +43,8 @@ export default function SignInModal({ onClose }: Props) {
     setLoading(true);
     try {
       if (mode === 'signup') {
-        await signUpWithEmail(email, password);
+        const user = await signUpWithEmail(email, password);
+        await migrateLocalData(user.uid);
       } else {
         await signInWithEmail(email, password);
       }

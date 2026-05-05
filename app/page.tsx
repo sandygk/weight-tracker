@@ -7,10 +7,9 @@ import OverviewTab from '@/components/OverviewTab';
 import WeightHistory from '@/components/WeightHistory';
 import SettingsTab from '@/components/SettingsTab';
 import LogModal from '@/components/LogModal';
-import { subscribeEntries, subscribeGoal, getEntriesOnce, migrateToDateIds } from '@/lib/db';
+import { subscribeEntries, subscribeGoal, migrateToDateIds } from '@/lib/db';
 import { onAuthChange, signOut, User } from '@/lib/firebaseAuth';
-import { getEntries, getGoal, getLocalData, replaceAll } from '@/lib/storage';
-import { importEntries, saveGoal } from '@/lib/data';
+import { getEntries, getGoal } from '@/lib/storage';
 import { getUnit, Unit } from '@/lib/units';
 import { dlog } from '@/lib/debugLog';
 import { getTheme, applyTheme } from '@/lib/theme';
@@ -33,7 +32,6 @@ export default function Home() {
   const [user, setUser] = useState<User | null>(null);
   const [authResolved, setAuthResolved] = useState(false);
   const [dataReady, setDataReady] = useState(false);
-  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'done'>('idle');
 
   const [tab, setTab] = useState<Tab>('chart');
   const [entries, setEntries] = useState<WeightEntry[]>([]);
@@ -47,35 +45,11 @@ export default function Home() {
     setGoal(getGoal());
   }, []);
 
-  // Auth listener — on sign-in, sync any localStorage entries that differ from
-  // Firestore (catches writes made before auth initialized, i.e. with null uid)
   useEffect(() => {
     return onAuthChange(async u => {
       dlog(`onAuthChange uid=${u?.uid ?? 'null'} email=${u?.email ?? 'none'}`);
       try {
-        if (u) {
-          const local = getLocalData();
-          dlog(`onAuthChange localEntries=${local.entries.length} hasGoal=${!!local.goal}`);
-          if (local.entries.length > 0) {
-            const existing = await getEntriesOnce(u.uid);
-            dlog(`onAuthChange firestoreEntries=${existing.length}`);
-            const firestoreDates = new Set(existing.map(e => e.date));
-            // Only push entries that don't exist in Firestore at all (written before
-            // auth initialized with null uid). Never overwrite existing Firestore
-            // entries with local data — Firestore is the source of truth when signed in.
-            const toSync = local.entries.filter(e => !firestoreDates.has(e.date));
-            dlog(`onAuthChange toSync=${toSync.length}`);
-            if (toSync.length > 0) {
-              setSyncStatus('syncing');
-              await importEntries(u.uid, toSync);
-              setSyncStatus('done');
-              setTimeout(() => setSyncStatus('idle'), 3000);
-            }
-            // Only push goal on first sign-in (no Firestore entries yet)
-            if (local.goal && existing.length === 0) await saveGoal(u.uid, local.goal);
-          }
-          await migrateToDateIds(u.uid);
-        }
+        if (u) await migrateToDateIds(u.uid);
         setUser(u);
         setAuthResolved(true);
       } catch (e) {
@@ -86,10 +60,8 @@ export default function Home() {
     });
   }, []);
 
-  // Firestore subscriptions — active only while signed in.
-  // Wait for auth to resolve before loading anything: if signed in, use Firestore
-  // (with offline cache for instant first load); if not signed in, use localStorage.
-  // This prevents localStorage data flashing before Firestore data arrives.
+  // Signed in → Firestore subscriptions drive state.
+  // Not signed in → read localStorage once.
   useEffect(() => {
     if (!authResolved) return;
     if (!user) {
@@ -106,7 +78,6 @@ export default function Home() {
   }, [user, authResolved, reload]);
 
   async function handleSignOut() {
-    replaceAll(entries, goal);
     await signOut();
   }
 
@@ -139,8 +110,8 @@ export default function Home() {
   }, []);
 
   const uid = user?.uid ?? null;
-  // When signed in, Firestore subscriptions update state automatically — calling
-  // reload() would read stale localStorage over live Firestore data.
+  // When signed in, Firestore subscription is the sole source of truth — never
+  // read localStorage over it after a write.
   const onChange = user ? () => {} : reload;
 
   return (
@@ -169,7 +140,6 @@ export default function Home() {
           <SettingsTab
             uid={uid}
             user={user}
-            syncStatus={syncStatus}
             onSignOut={handleSignOut}
             onUnitChange={setUnit}
             installPrompt={installPrompt}

@@ -11,14 +11,13 @@ import GoalSettings from '@/components/GoalSettings';
 import SegmentedControl from '@/components/SegmentedControl';
 import SignInModal from '@/components/SignInScreen';
 import { Goal, WeightEntry } from '@/types';
-import { Sun, Moon, Monitor, LogOut, CloudUpload } from 'lucide-react';
+import { Sun, Moon, Monitor, LogOut } from 'lucide-react';
 import { User } from '@/lib/firebaseAuth';
 import { getLogs, clearLogs } from '@/lib/debugLog';
 
 interface Props {
   uid: string | null;
   user: User | null;
-  syncStatus: 'idle' | 'syncing' | 'done';
   onSignOut: () => void;
   onUnitChange: (unit: Unit) => void;
   installPrompt: any;
@@ -28,7 +27,7 @@ interface Props {
   entries: WeightEntry[];
 }
 
-export default function SettingsTab({ uid, user, syncStatus, onSignOut, onUnitChange, installPrompt, onInstalled, onImport, goal, entries }: Props) {
+export default function SettingsTab({ uid, user, onSignOut, onUnitChange, installPrompt, onInstalled, onImport, goal, entries }: Props) {
   const [unit, setUnit] = useState<Unit>(() => getUnit());
   const [theme, setTheme] = useState<Theme>(() => getTheme());
   const [showSignIn, setShowSignIn] = useState(false);
@@ -92,14 +91,6 @@ export default function SettingsTab({ uid, user, syncStatus, onSignOut, onUnitCh
                 <p className="text-sm text-gray-600 dark:text-gray-300 truncate flex-1">
                   {user.email ?? user.displayName ?? 'Signed in'}
                 </p>
-                {syncStatus === 'syncing' && (
-                  <span className="flex items-center gap-1 text-xs text-blue-500">
-                    <CloudUpload size={12} className="animate-pulse" /> Syncing…
-                  </span>
-                )}
-                {syncStatus === 'done' && (
-                  <span className="text-xs text-green-500">Synced ✓</span>
-                )}
               </div>
               <Button variant="outline" onClick={onSignOut} className="w-full flex items-center gap-2">
                 <LogOut size={14} />
