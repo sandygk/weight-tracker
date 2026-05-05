@@ -1,12 +1,13 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import BottomNav, { Tab } from '@/components/BottomNav';
 import OverviewTab from '@/components/OverviewTab';
 import WeightHistory from '@/components/WeightHistory';
 import SettingsTab from '@/components/SettingsTab';
 import LogModal from '@/components/LogModal';
+import SignInModal from '@/components/SignInScreen';
 import { subscribeEntries, subscribeGoal, migrateToDateIds } from '@/lib/db';
 import { onAuthChange, signOut, User } from '@/lib/firebaseAuth';
 import { getEntries, getGoal } from '@/lib/storage';
@@ -39,6 +40,8 @@ export default function Home() {
   const [unit, setUnit] = useState<Unit>('lb');
   const [showLog, setShowLog] = useState(false);
   const [installPrompt, setInstallPrompt] = useState<any>(null);
+  const [showSignInBanner, setShowSignInBanner] = useState(false);
+  const [showSignIn, setShowSignIn] = useState(false);
 
   const reload = useCallback(() => {
     setEntries(getEntries());
@@ -59,6 +62,13 @@ export default function Home() {
       }
     });
   }, []);
+
+  // Show sign-in banner once for unlogged users (unless permanently dismissed).
+  useEffect(() => {
+    if (!authResolved) return;
+    if (!user && !localStorage.getItem('wt-banner-dismissed')) setShowSignInBanner(true);
+    else setShowSignInBanner(false);
+  }, [authResolved, user]);
 
   // Signed in → Firestore subscriptions drive state.
   // Not signed in → read localStorage once.
@@ -114,8 +124,13 @@ export default function Home() {
   // read localStorage over it after a write.
   const onChange = user ? () => {} : reload;
 
+  function dismissBanner() {
+    localStorage.setItem('wt-banner-dismissed', '1');
+    setShowSignInBanner(false);
+  }
+
   return (
-    <main className="bg-gray-50 dark:bg-gray-950 pb-20">
+    <main className={`bg-gray-50 dark:bg-gray-950 pb-20 ${showSignInBanner ? 'pt-11' : ''}`}>
       {tab !== 'chart' && (
         <header className="px-5 pt-5 pb-1">
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">
@@ -164,6 +179,24 @@ export default function Home() {
 
       {showLog && (
         <LogModal uid={uid} entries={entries} unit={unit} onSave={onChange} onClose={() => setShowLog(false)} />
+      )}
+
+      {showSignIn && <SignInModal onClose={() => setShowSignIn(false)} />}
+
+      {showSignInBanner && (
+        <div className="fixed top-0 left-0 right-0 z-30 bg-blue-500 text-white px-4 py-2.5 flex items-center gap-3 shadow-md">
+          <p className="text-xs flex-1">Sign in to sync your data across devices.</p>
+          <button
+            type="button"
+            onClick={() => setShowSignIn(true)}
+            className="text-xs font-semibold bg-white/20 hover:bg-white/30 rounded-lg px-3 py-1 transition-colors shrink-0"
+          >
+            Sign In
+          </button>
+          <button type="button" onClick={dismissBanner} className="text-white/70 hover:text-white shrink-0">
+            <X size={16} />
+          </button>
+        </div>
       )}
 
       <BottomNav active={tab} onChange={handleTabChange} />
