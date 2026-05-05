@@ -1,4 +1,5 @@
 import { Goal } from '@/types';
+import { localDateStr } from './date';
 
 export type ColorTier = 'green' | 'lime' | 'orange' | 'red' | 'default';
 
@@ -38,7 +39,7 @@ export function goalEndDate(goal: Goal): string | null {
   if (weeksNeeded <= 0) return null;
   const d = new Date(goal.startDate + 'T12:00:00');
   d.setDate(d.getDate() + Math.ceil(weeksNeeded * 7));
-  return d.toISOString().split('T')[0];
+  return localDateStr(d);
 }
 
 /** Returns the expected goal weight (in same units as goal) for a given date, or null if outside goal range. */

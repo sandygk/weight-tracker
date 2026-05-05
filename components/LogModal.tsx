@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import { upsertEntry } from '@/lib/data';
 import { WeightEntry } from '@/types';
 import { Unit, toDisplay, toStorage } from '@/lib/units';
+import { localDateStr } from '@/lib/date';
 
 interface Props {
   uid: string | null;
@@ -14,7 +15,7 @@ interface Props {
 }
 
 function today(): string {
-  return new Date().toISOString().split('T')[0];
+  return localDateStr();
 }
 
 function formatDateShort(dateStr: string): string {

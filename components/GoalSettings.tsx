@@ -8,6 +8,7 @@ import { saveGoal, clearGoal } from '@/lib/data';
 import { goalEndDate } from '@/lib/goalCalculator';
 import { Goal, WeightEntry } from '@/types';
 import { Unit, toDisplay, toStorage } from '@/lib/units';
+import { localDateStr } from '@/lib/date';
 import { Target, Trash2 } from 'lucide-react';
 
 interface Props {
@@ -42,7 +43,7 @@ export default function GoalSettings({ uid, goal, entries, unit, onSave }: Props
     ? toDisplay(goal.weeklyLoss, unit)
     : unit === 'kg' ? 0.5 : 1;
 
-  const [startDate, setStartDate] = useState(goal?.startDate ?? new Date().toISOString().split('T')[0]);
+  const [startDate, setStartDate] = useState(goal?.startDate ?? localDateStr());
   const [startWeight, setStartWeight] = useState(String(defaultStartWeight));
   const [goalWeight, setGoalWeight] = useState(String(goal?.goalWeight ? toDisplay(goal.goalWeight, unit) : ''));
   const [weeklyLoss, setWeeklyLoss] = useState(String(defaultWeeklyLoss));

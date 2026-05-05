@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Unit, getUnit, saveUnit } from '@/lib/units';
 import { exportJSON } from '@/lib/storage';
+import { localDateStr } from '@/lib/date';
 import { Theme, getTheme, saveTheme, applyTheme } from '@/lib/theme';
 import CSVImport from '@/components/CSVImport';
 import GoalSettings from '@/components/GoalSettings';
@@ -61,7 +62,7 @@ export default function SettingsTab({ uid, user, onSignOut, onUnitChange, instal
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `weight-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `weight-${localDateStr()}.json`;
     a.click();
     URL.revokeObjectURL(url);
   }

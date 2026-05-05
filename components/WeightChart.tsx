@@ -6,6 +6,7 @@ import {
 import { WeightEntry, Goal } from '@/types';
 import { goalEndDate, expectedWeightOnDate, goalColorTier, TIER_CLASS, TIER_STROKE, ColorTier } from '@/lib/goalCalculator';
 import { Unit, toDisplay } from '@/lib/units';
+import { localDateStr } from '@/lib/date';
 import { useIsDark } from '@/lib/theme';
 
 interface ChartPoint {
@@ -85,7 +86,7 @@ function buildGoalAnchors(mainData: ChartPoint[]): { ts: number; label: string; 
 
 function buildData(entries: WeightEntry[], goal: Goal | null, extendGoalLine: boolean, unit: Unit): ChartPoint[] {
   const sorted = [...entries].sort((a, b) => a.date.localeCompare(b.date));
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = localDateStr();
   const goalEnd = goal ? goalEndDate(goal) : null;
   const map = new Map<string, ChartPoint>();
 
@@ -228,7 +229,7 @@ export default function WeightChart({ entries, goal, unit, extendGoalLine = fals
             domain={['dataMin', 'dataMax']}
             ticks={data.map(p => p.ts)}
             interval="preserveStartEnd"
-            tickFormatter={(ts: number) => fmt(new Date(ts).toISOString().split('T')[0])}
+            tickFormatter={(ts: number) => fmt(localDateStr(new Date(ts)))}
             tick={{ fontSize: 10, fill: isDark ? '#6b7280' : '#9ca3af' }}
             axisLine={false} tickLine={false}
           />

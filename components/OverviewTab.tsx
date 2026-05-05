@@ -5,6 +5,7 @@ import WeightChart from './WeightChart';
 import { WeightEntry, Goal } from '@/types';
 import { goalEndDate, expectedWeightOnDate, goalColorTier, TIER_CLASS } from '@/lib/goalCalculator';
 import { Unit, toDisplay } from '@/lib/units';
+import { localDateStr } from '@/lib/date';
 
 const RANGE_KEY = 'wt-range';
 
@@ -69,7 +70,7 @@ export default function OverviewTab({ entries, goal, unit, loading = false }: Pr
   );
 
   const goalEnd = goal ? goalEndDate(goal) : null;
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = localDateStr();
   const goalIsFuture = !!goalEnd && goalEnd > todayStr;
 
   const activeRange: RangeLabel =
@@ -91,7 +92,7 @@ export default function OverviewTab({ entries, goal, unit, loading = false }: Pr
     if (!isFinite(r.days)) return sorted;
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - r.days);
-    const cutoffStr = cutoff.toISOString().split('T')[0];
+    const cutoffStr = localDateStr(cutoff);
     return sorted.filter(e => e.date >= cutoffStr);
   }, [sorted, activeRange, goal]);
 
