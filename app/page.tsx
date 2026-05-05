@@ -88,6 +88,7 @@ export default function Home() {
   }, [user, authResolved, reload]);
 
   async function handleSignOut() {
+    localStorage.removeItem('wt-banner-dismissed');
     await signOut();
   }
 
