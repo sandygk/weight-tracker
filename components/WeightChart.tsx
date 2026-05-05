@@ -251,10 +251,10 @@ export default function WeightChart({ entries, goal, unit, extendGoalLine = fals
       <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl px-3 py-2 shadow-md text-xs max-w-52">
         <p className="text-gray-500 dark:text-gray-400 mb-0.5">{dateLabel}</p>
         <p className={`text-sm font-bold ${weightClass}`}>{wp.value} {unit}</p>
-        {prevDelta !== null && prevDateLabel && (
+        {vsTodayDelta !== null && (
           <p className="mt-1 text-gray-400 dark:text-gray-500">
-            <span className={prevDeltaColor}>{prevDelta > 0 ? '+' : ''}{prevDelta} {unit}</span>
-            {' '}vs previous (<span className={prevWeightColor}>{pt.prevWeight} {unit}</span>)
+            <span className={vsTodayColor}>{vsTodayDelta > 0 ? '+' : ''}{vsTodayDelta} {unit}</span>
+            {' '}vs today (<span className={todayWeightColor}>{todayWeightDisplay} {unit}</span>)
           </p>
         )}
         {goalDisplay != null && vsTarget !== null && (
@@ -263,10 +263,10 @@ export default function WeightChart({ entries, goal, unit, extendGoalLine = fals
             {' '}vs target (<span className="text-blue-500">{goalDisplay}</span>)
           </p>
         )}
-        {vsTodayDelta !== null && (
+        {prevDelta !== null && prevDateLabel && (
           <p className="mt-1 text-gray-400 dark:text-gray-500">
-            <span className={vsTodayColor}>{vsTodayDelta > 0 ? '+' : ''}{vsTodayDelta} {unit}</span>
-            {' '}vs today (<span className={todayWeightColor}>{todayWeightDisplay} {unit}</span>)
+            <span className={prevDeltaColor}>{prevDelta > 0 ? '+' : ''}{prevDelta} {unit}</span>
+            {' '}vs previous (<span className={prevWeightColor}>{pt.prevWeight} {unit}</span>)
           </p>
         )}
         {pt.note && <p className="text-gray-400 dark:text-gray-500 mt-1 italic">{pt.note}</p>}
