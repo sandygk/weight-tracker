@@ -184,7 +184,14 @@ export default function WeightChart({ entries, goal, unit, extendGoalLine = fals
     if (!wp?.payload?.date || wp.value == null) return null;
 
     const pt = wp.payload;
-    const dateLabel = new Date(pt.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const thisYear = new Date().getFullYear();
+    const fmtDate = (d: string) => {
+      const dt = new Date(d + 'T12:00:00');
+      return dt.toLocaleDateString('en-US', dt.getFullYear() === thisYear
+        ? { month: 'short', day: 'numeric' }
+        : { month: 'short', day: 'numeric', year: 'numeric' });
+    };
+    const dateLabel = fmtDate(pt.date);
     const weightClass = TIER_CLASS[segColor({ date: pt.date, ts: pt.ts ?? 0, label: dateLabel, weight: wp.value }, goal, unit)];
 
     const goalForDate = goal ? expectedWeightOnDate(goal, pt.date) : null;
@@ -193,7 +200,7 @@ export default function WeightChart({ entries, goal, unit, extendGoalLine = fals
 
     const isGainGoal = !!(goal && goal.goalWeight > goal.startWeight);
     const prevDelta = pt.prevWeight != null ? Math.round((Number(wp.value) - pt.prevWeight) * 10) / 10 : null;
-    const prevDateLabel = pt.prevDate ? new Date(pt.prevDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : null;
+    const prevDateLabel = pt.prevDate ? fmtDate(pt.prevDate) : null;
     const prevDeltaColor = !goal || prevDelta === null || prevDelta === 0
       ? 'text-gray-400 dark:text-gray-500'
       : (prevDelta < 0) === !isGainGoal ? 'text-green-500' : 'text-red-400';
