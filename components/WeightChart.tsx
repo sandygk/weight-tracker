@@ -223,9 +223,16 @@ export default function WeightChart({ entries, goal, unit, extendGoalLine = fals
     const isGainGoal = !!(goal && goal.goalWeight > goal.startWeight);
     const prevDelta = pt.prevWeight != null ? Math.round((Number(wp.value) - pt.prevWeight) * 10) / 10 : null;
     const prevDateLabel = pt.prevDate ? fmtDate(pt.prevDate) : null;
-    const prevDeltaColor = !goal || prevDelta === null || prevDelta === 0
+    const tierColor = (delta: number) => {
+      const diff = isGainGoal ? -delta : delta;
+      if (diff <= -1) return TIER_CLASS.green;
+      if (diff <= 0)  return TIER_CLASS.lime;
+      if (diff <= 1)  return TIER_CLASS.orange;
+      return TIER_CLASS.red;
+    };
+    const prevDeltaColor = !goal || prevDelta === null
       ? 'text-gray-400 dark:text-gray-500'
-      : (prevDelta < 0) === !isGainGoal ? 'text-green-500' : 'text-red-400';
+      : tierColor(prevDelta);
     const prevWeightColor = (pt.prevDate && pt.prevWeight != null)
       ? TIER_CLASS[segColor({ date: pt.prevDate, ts: 0, label: '', weight: pt.prevWeight }, goal, unit)]
       : 'text-gray-400 dark:text-gray-500';
@@ -233,9 +240,9 @@ export default function WeightChart({ entries, goal, unit, extendGoalLine = fals
     const vsTodayDelta = (todayWeightDisplay != null && pt.date !== todayStr)
       ? Math.round((Number(wp.value) - todayWeightDisplay) * 10) / 10
       : null;
-    const vsTodayColor = !goal || vsTodayDelta === null || vsTodayDelta === 0
+    const vsTodayColor = !goal || vsTodayDelta === null
       ? 'text-gray-400 dark:text-gray-500'
-      : (vsTodayDelta < 0) === !isGainGoal ? 'text-green-500' : 'text-red-400';
+      : tierColor(vsTodayDelta);
     const todayWeightColor = todayPoint
       ? TIER_CLASS[segColor({ date: todayStr, ts: todayPoint.ts, label: '', weight: todayWeightDisplay! }, goal, unit)]
       : 'text-gray-400 dark:text-gray-500';
