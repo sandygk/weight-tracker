@@ -88,10 +88,20 @@ export default function SettingsTab({ uid, user, onSignOut, onUnitChange, instal
         <CardContent className="space-y-3">
           {user ? (
             <>
-              <div className="flex items-center gap-2">
-                <p className="text-sm text-gray-600 dark:text-gray-300 truncate flex-1">
-                  {user.email ?? user.displayName ?? 'Signed in'}
-                </p>
+              <div className="flex items-center gap-3">
+                {user.photoURL ? (
+                  <img src={user.photoURL} alt="avatar" className="w-10 h-10 rounded-full shrink-0" />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-bold shrink-0">
+                    {(user.displayName ?? user.email ?? '?')[0].toUpperCase()}
+                  </div>
+                )}
+                <div className="min-w-0">
+                  {user.displayName && (
+                    <p className="text-sm font-medium text-gray-800 dark:text-gray-100 truncate">{user.displayName}</p>
+                  )}
+                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
+                </div>
               </div>
               <Button variant="outline" onClick={onSignOut} className="w-full flex items-center gap-2">
                 <LogOut size={14} />
