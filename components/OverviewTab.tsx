@@ -150,7 +150,7 @@ export default function OverviewTab({ entries, goal, unit, loading = false }: Pr
         <select
           value={activeRange}
           onChange={e => handleRangeChange(e.target.value as RangeLabel)}
-          className="text-xs font-semibold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full px-3 py-1.5 border-0 cursor-pointer focus:outline-none"
+          className="appearance-none bg-transparent text-xs font-semibold text-gray-500 dark:text-gray-400 cursor-pointer focus:outline-none"
         >
           {STATIC_RANGES.map(r => (
             <option key={r.label} value={r.label}>{r.name}</option>
