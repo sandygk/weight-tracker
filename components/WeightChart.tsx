@@ -144,9 +144,12 @@ export default function WeightChart({ entries, goal, unit, extendGoalLine = fals
     );
   }
 
+  const todayStr = localDateStr();
   const data = buildData(entries, goal, extendGoalLine, unit);
   const colorRuns = buildColorRuns(data, goal, unit);
   const goalAnchors = goal ? buildGoalAnchors(data) : null;
+  const todayPoint = data.find(p => p.date === todayStr);
+  const todayWeightDisplay = todayPoint?.weight ?? null;
 
   const displayWeights = entries.map(e => toDisplay(e.weight, unit));
   const yMin = Math.floor(Math.min(...displayWeights) - 1);
@@ -198,6 +201,16 @@ export default function WeightChart({ entries, goal, unit, extendGoalLine = fals
       ? TIER_CLASS[segColor({ date: pt.prevDate, ts: 0, label: '', weight: pt.prevWeight }, goal, unit)]
       : 'text-gray-400 dark:text-gray-500';
 
+    const vsTodayDelta = (todayWeightDisplay != null && pt.date !== todayStr)
+      ? Math.round((Number(wp.value) - todayWeightDisplay) * 10) / 10
+      : null;
+    const vsTodayColor = !goal || vsTodayDelta === null || vsTodayDelta === 0
+      ? 'text-gray-400 dark:text-gray-500'
+      : (vsTodayDelta < 0) === !isGainGoal ? 'text-green-500' : 'text-red-400';
+    const todayWeightColor = todayPoint
+      ? TIER_CLASS[segColor({ date: todayStr, ts: todayPoint.ts, label: '', weight: todayWeightDisplay! }, goal, unit)]
+      : 'text-gray-400 dark:text-gray-500';
+
     return (
       <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl px-3 py-2 shadow-md text-xs max-w-52">
         <p className="text-gray-500 dark:text-gray-400 mb-0.5">{dateLabel}</p>
@@ -206,6 +219,12 @@ export default function WeightChart({ entries, goal, unit, extendGoalLine = fals
           <p className="text-gray-400 dark:text-gray-500">
             <span className={prevDeltaColor}>{prevDelta > 0 ? '+' : ''}{prevDelta} {unit}</span>
             {' '}vs {prevDateLabel} (<span className={prevWeightColor}>{pt.prevWeight} {unit}</span>)
+          </p>
+        )}
+        {vsTodayDelta !== null && (
+          <p className="text-gray-400 dark:text-gray-500">
+            <span className={vsTodayColor}>{vsTodayDelta > 0 ? '+' : ''}{vsTodayDelta} {unit}</span>
+            {' '}vs today (<span className={todayWeightColor}>{todayWeightDisplay} {unit}</span>)
           </p>
         )}
         {goalDisplay != null && vsTarget !== null && (
