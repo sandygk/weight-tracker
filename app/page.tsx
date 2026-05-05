@@ -166,7 +166,7 @@ export default function Home() {
         <LogModal uid={uid} entries={entries} unit={unit} onSave={onChange} onClose={() => setShowLog(false)} />
       )}
 
-      <BottomNav active={tab} onChange={handleTabChange} />
+      <BottomNav active={tab} onChange={handleTabChange} user={user} />
     </main>
   );
 }
