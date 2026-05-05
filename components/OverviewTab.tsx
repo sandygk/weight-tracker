@@ -46,7 +46,7 @@ function OverviewSkeleton() {
         <div className="h-7 w-24 bg-gray-200 dark:bg-gray-800 rounded-lg" />
         <div className="h-7 w-16 bg-gray-200 dark:bg-gray-800 rounded-full" />
       </div>
-      <div className="grid grid-cols-3 text-center px-2 pb-4 gap-2">
+      <div className="grid grid-cols-3 text-center px-2 pb-7 gap-2">
         {[0, 1, 2].map(i => (
           <div key={i} className="flex flex-col items-center gap-2">
             <div className="h-3 w-16 bg-gray-200 dark:bg-gray-800 rounded" />
