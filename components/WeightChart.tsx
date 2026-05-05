@@ -155,6 +155,11 @@ export default function WeightChart({ entries, goal, unit, extendGoalLine = fals
   const yMin = Math.floor(Math.min(...displayWeights) - 1);
   const yMax = Math.ceil(Math.max(...displayWeights) + 1);
 
+  const minW = Math.min(...displayWeights);
+  const maxW = Math.max(...displayWeights);
+  const minDate = entries.find(e => toDisplay(e.weight, unit) === minW)?.date;
+  const maxDate = entries.find(e => toDisplay(e.weight, unit) === maxW)?.date;
+
   const getDotColor = (payload: any): string => {
     if (!goal || !payload?.date || payload.weight == null) return TIER_STROKE.default;
     const exp = expectedWeightOnDate(goal, payload.date);
@@ -165,6 +170,23 @@ export default function WeightChart({ entries, goal, unit, extendGoalLine = fals
     const { cx, cy, payload } = props;
     if (!payload?.weight || cx == null || cy == null) return null;
     const color = getDotColor(payload);
+    const isExtrema = payload.date === minDate || payload.date === maxDate;
+    const isMax = payload.date === maxDate;
+
+    if (isExtrema) {
+      const r = 5.5;
+      const pts = `${cx},${cy - r} ${cx + r},${cy} ${cx},${cy + r} ${cx - r},${cy}`;
+      const labelY = isMax ? cy - r - 4 : cy + r + 11;
+      return (
+        <g>
+          <polygon points={pts} fill={color} stroke={isDark ? '#030712' : 'white'} strokeWidth={1.5} />
+          <text x={cx} y={labelY} textAnchor="middle" fontSize={9} fontWeight={600} fill={color}>
+            {payload.weight}
+          </text>
+        </g>
+      );
+    }
+
     return (
       <circle cx={cx} cy={cy} r={payload.note ? 4.5 : 3}
         fill={payload.note ? color : 'white'} stroke={color} strokeWidth={1.5}
@@ -225,7 +247,7 @@ export default function WeightChart({ entries, goal, unit, extendGoalLine = fals
         {prevDelta !== null && prevDateLabel && (
           <p className="text-gray-400 dark:text-gray-500">
             <span className={prevDeltaColor}>{prevDelta > 0 ? '+' : ''}{prevDelta} {unit}</span>
-            {' '}vs {prevDateLabel} (<span className={prevWeightColor}>{pt.prevWeight} {unit}</span>)
+            {' '}vs previous (<span className={prevWeightColor}>{pt.prevWeight} {unit}</span>)
           </p>
         )}
         {vsTodayDelta !== null && (
