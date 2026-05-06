@@ -168,7 +168,7 @@ export default function WeightChart({ entries, goal, unit, extendGoalLine = fals
 
   const CustomDot = (props: any) => {
     const { cx, cy, payload } = props;
-    if (!payload?.weight || cx == null || cy == null) return null;
+    if (payload?.weight == null || cx == null || cy == null) return null;
     const color = getDotColor(payload);
     const isExtrema = payload.date === minDate || payload.date === maxDate;
     const isMax = payload.date === maxDate;
