@@ -123,6 +123,12 @@ export default function OverviewTab({ entries, goal, unit, loading = false }: Pr
 
   const isGainGoal = !!(goal && goal.goalWeight > goal.startWeight);
 
+  const startColor = (() => {
+    if (!goal || !rangeFirst) return TIER_CLASS.default;
+    const exp = expectedWeightOnDate(goal, rangeFirst.date);
+    return TIER_CLASS[goalColorTier(toDisplay(rangeFirst.weight, unit), exp != null ? toDisplay(exp, unit) : null, isGainGoal)];
+  })();
+
   const currentColor = (() => {
     if (!goal || !latest) return TIER_CLASS.default;
     const exp = expectedWeightOnDate(goal, todayStr);
@@ -166,9 +172,9 @@ export default function OverviewTab({ entries, goal, unit, loading = false }: Pr
         {/* Start */}
         <div className="flex flex-col items-center gap-0.5 px-1">
           <p className="text-xs text-gray-400 dark:text-gray-500">Start · {rangeFirst ? formatShortDate(rangeFirst.date) : '—'}</p>
-          <p className="text-2xl font-bold text-gray-700 dark:text-gray-200 leading-tight">
+          <p className={`text-2xl font-bold leading-tight ${startColor}`}>
             {rangeFirst ? toDisplay(rangeFirst.weight, unit) : '—'}
-            {rangeFirst && <span className="text-sm font-medium text-gray-500 dark:text-gray-400 ml-0.5">{unit}</span>}
+            {rangeFirst && <span className="text-sm font-medium ml-0.5 opacity-70">{unit}</span>}
           </p>
           {totalChange !== null && (
             <>
@@ -200,9 +206,9 @@ export default function OverviewTab({ entries, goal, unit, loading = false }: Pr
         {/* End Goal */}
         <div className="flex flex-col items-center gap-0.5 px-1">
           <p className="text-xs text-gray-400 dark:text-gray-500">End · {goalEnd ? formatShortDate(goalEnd) : '—'}</p>
-          <p className="text-2xl font-bold text-gray-700 dark:text-gray-200 leading-tight">
+          <p className={`text-2xl font-bold leading-tight ${goal ? 'text-blue-500' : TIER_CLASS.default}`}>
             {goal ? toDisplay(goal.goalWeight, unit) : '—'}
-            {goal && <span className="text-sm font-medium text-gray-500 dark:text-gray-400 ml-0.5">{unit}</span>}
+            {goal && <span className="text-sm font-medium ml-0.5 opacity-70">{unit}</span>}
           </p>
           {remainingToGoal !== null && (
             (isGainGoal ? remainingToGoal >= 0 : remainingToGoal <= 0)
