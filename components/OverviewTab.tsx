@@ -172,7 +172,7 @@ export default function OverviewTab({ entries, goal, unit, loading = false }: Pr
           </p>
           {totalChange !== null && (
             <>
-              <p className={`text-xs font-semibold ${totalChange === 0 ? 'text-gray-400' : (totalChange > 0) === isGainGoal ? 'text-green-500' : 'text-red-500'}`}>
+              <p className={`text-xs font-semibold ${!goal || totalChange === 0 ? 'text-gray-400' : TIER_CLASS[goalColorTier(toDisplay(latest!.weight, unit), toDisplay(rangeFirst!.weight, unit), isGainGoal)]}`}>
                 {totalChange > 0 ? '+' : ''}{totalChange} {unit}
               </p>
               <p className="text-gray-400 dark:text-gray-500 font-normal" style={{ fontSize: 10 }}>since start</p>
